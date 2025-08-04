@@ -1,0 +1,57 @@
+{
+  "name": "geoforge-cli",
+  "version": "0.1.0",
+  "description": "Generate AI-ready optimization files for websites, including robots.txt, sitemaps, and AI manifests",
+  "keywords": [
+    "ai",
+    "seo",
+    "robots.txt",
+    "sitemap",
+    "optimization",
+    "crawler",
+    "openai",
+    "anthropic",
+    "perplexity",
+    "cli",
+    "command-line"
+  ],
+  "author": "Brian Funk",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brianfunk/geoforge.git"
+  },
+  "homepage": "https://geoforge.dev",
+  "bugs": {
+    "url": "https://github.com/brianfunk/geoforge/issues"
+  },
+  "type": "module",
+  "main": "dist/cli/index.js",
+  "bin": {
+    "geoforge": "dist/cli/index.js"
+  },
+  "files": [
+    "dist/**/*",
+    "src/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.cli.json",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "jsdom": "^26.1.0",
+    "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^24.1.0",
+    "typescript": "^5.5.3"
+  }
+}
