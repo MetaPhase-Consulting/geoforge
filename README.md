@@ -15,8 +15,6 @@
 
 GEOforge is an open-source tool that generates AI-ready optimization files for websites, including robots.txt, sitemaps, and vendor-specific AI manifests. Built for the modern web where AI crawlers and search engines need structured, accessible content.
 
-![GEOforge Interface](public/logo_mpc_header_color.svg)
-
 ## 🎯 Project Purpose
 
 GEOforge bridges the gap between traditional SEO and AI discovery by providing tools to optimize websites for both human users and AI systems. It generates standardized files that help AI crawlers understand your content while maintaining control over how your data is used for training.
