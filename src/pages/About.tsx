@@ -20,14 +20,6 @@ export default function About() {
     }
   ];
 
-  const team = [
-    {
-      name: 'MetaPhase',
-      role: 'Creator & Maintainer',
-      description: 'Passionate about AI optimization and web standards.'
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-white dark:bg-matte-bg py-12">
       <div className="container mx-auto px-6 max-w-4xl">
@@ -102,42 +94,6 @@ export default function About() {
             <p>
               GEOforge automates this process by generating the necessary files and configurations that make your website "AI-ready" while respecting your preferences and policies.
             </p>
-          </div>
-        </div>
-
-        {/* Team */}
-        <div className="bg-white dark:bg-charcoal rounded-2xl p-8 border border-gold/20 dark:border-gold/30 mb-8">
-          <h2 className="font-orbitron text-2xl font-bold text-charcoal dark:text-white mb-6 text-center">
-            Team
-          </h2>
-          <div className="max-w-md mx-auto">
-            {team.map((member, index) => (
-              <div key={index} className="text-center">
-                <div className="w-20 h-20 mx-auto mb-4 bg-gold/10 dark:bg-gold/20 rounded-2xl flex items-center justify-center">
-                  <div className="w-16 h-16 relative">
-                    <img 
-                      src="/logo_mpc_header_color.svg" 
-                      alt="MetaPhase Logo"
-                      className="w-full h-full object-contain dark:hidden"
-                    />
-                    <img 
-                      src="/logo_mpc_header_white.svg" 
-                      alt="MetaPhase Logo"
-                      className="w-full h-full object-contain hidden dark:block"
-                    />
-                  </div>
-                </div>
-                <h3 className="font-orbitron text-xl font-bold text-charcoal dark:text-white mb-2">
-                  {member.name}
-                </h3>
-                <p className="text-gold font-work-sans font-medium mb-2">
-                  {member.role}
-                </p>
-                <p className="font-work-sans text-charcoal/70 dark:text-silver">
-                  {member.description}
-                </p>
-              </div>
-            ))}
           </div>
         </div>
 
