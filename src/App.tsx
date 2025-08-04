@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Online from './pages/Online';
 import CommandLine from './pages/CommandLine';
 import About from './pages/About';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
               <Route path="/online" element={<Online />} />
               <Route path="/command-line" element={<CommandLine />} />
               <Route path="/about" element={<About />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
           <Footer />

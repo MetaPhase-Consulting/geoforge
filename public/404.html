@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Forge Not Found - GEOforge</title>
+    <meta name="description" content="Oops! This forge got lost in the AI training data. Explore our AI optimization tools instead.">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.3; transform: scale(1) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
+        }
+        
+        @keyframes forge {
+            0% { transform: translateY(0) scale(1); }
+            25% { transform: translateY(-5px) scale(1.05); }
+            50% { transform: translateY(-10px) scale(1.1); }
+            75% { transform: translateY(-5px) scale(1.05); }
+            100% { transform: translateY(0) scale(1); }
+        }
+        
+        @keyframes hammer {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-15deg); }
+            75% { transform: rotate(15deg); }
+        }
+        
+        @keyframes anvil {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+        
+        @keyframes goldGlow {
+            0%, 100% { filter: drop-shadow(0 0 5px #D4AF37); }
+            50% { filter: drop-shadow(0 0 20px #F4D03F) drop-shadow(0 0 30px #FFD700); }
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d1b0e 25%, #1a1a1a 50%, #2d1b0e 75%, #1a1a1a 100%);
+            background-size: 400% 400%;
+            animation: shimmer 8s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(244, 208, 63, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(255, 215, 0, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 800px;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .error-code {
+            font-size: 15rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #D4AF37, #F4D03F, #FFD700, #FFA500, #D4AF37);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s ease infinite, forge 4s ease-in-out infinite;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.3));
+        }
+        
+        .forge-icons {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .forge-icon {
+            position: absolute;
+            font-size: 3rem;
+            animation: sparkle 4s ease-in-out infinite;
+            opacity: 0.6;
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.5));
+        }
+        
+        .forge-icon:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+        .forge-icon:nth-child(2) { top: 20%; right: 15%; animation-delay: 1s; }
+        .forge-icon:nth-child(3) { bottom: 30%; left: 20%; animation-delay: 2s; }
+        .forge-icon:nth-child(4) { bottom: 20%; right: 10%; animation-delay: 3s; }
+        .forge-icon:nth-child(5) { top: 50%; left: 5%; animation-delay: 0.5s; }
+        .forge-icon:nth-child(6) { top: 60%; right: 5%; animation-delay: 1.5s; }
+        
+        .hammer {
+            animation: hammer 2s ease-in-out infinite !important;
+        }
+        
+        .anvil {
+            animation: anvil 3s ease-in-out infinite !important;
+        }
+        
+        h1 {
+            font-size: 4rem;
+            margin: 1rem 0;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            background: linear-gradient(45deg, #D4AF37, #F4D03F, #FFD700);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 4s ease infinite;
+        }
+        
+        h2 {
+            font-size: 2rem;
+            margin: 1rem 0;
+            font-weight: 600;
+            opacity: 0.9;
+            color: #F4D03F;
+            text-shadow: 0 0 10px rgba(244, 208, 63, 0.5);
+        }
+        
+        p {
+            font-size: 1.3rem;
+            margin: 1rem 0;
+            opacity: 0.9;
+            line-height: 1.6;
+            color: #E5E5E5;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(45deg, #D4AF37, #F4D03F, #FFD700);
+            background-size: 200% 200%;
+            color: #1a1a1a;
+            text-decoration: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            margin: 1rem;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            font-weight: 700;
+            backdrop-filter: blur(10px);
+            animation: shimmer 3s ease infinite;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+        
+        .btn:hover {
+            background: linear-gradient(45deg, #F4D03F, #FFD700, #FFA500);
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.5);
+            animation: goldGlow 1s ease infinite;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #D4AF37, #F4D03F, #FFD700);
+            border: none;
+            font-size: 1.1rem;
+        }
+        
+        .btn-secondary {
+            background: rgba(212, 175, 55, 0.2);
+            color: #F4D03F;
+            border: 2px solid #D4AF37;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(212, 175, 55, 0.3);
+            color: #FFD700;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin: 3rem 0;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .stat {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(244, 208, 63, 0.1));
+            padding: 1.5rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .stat:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
+            animation: goldGlow 2s ease infinite;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #D4AF37, #F4D03F, #FFD700);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s ease infinite;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+            color: #F4D03F;
+            font-weight: 600;
+        }
+        
+        .easter-egg {
+            margin-top: 3rem;
+            font-size: 1rem;
+            opacity: 0.8;
+            font-style: italic;
+            color: #F4D03F;
+            text-shadow: 0 0 10px rgba(244, 208, 63, 0.3);
+            animation: shimmer 4s ease infinite;
+        }
+        
+        .forge-message {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(244, 208, 63, 0.1));
+            padding: 2rem;
+            border-radius: 20px;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            margin: 2rem 0;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+        }
+        
+        .forge-message h3 {
+            color: #F4D03F;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px rgba(244, 208, 63, 0.5);
+        }
+        
+        @media (max-width: 768px) {
+            .error-code {
+                font-size: 10rem;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="forge-icons">
+        <div class="forge-icon hammer">🔨</div>
+        <div class="forge-icon anvil">⚒️</div>
+        <div class="forge-icon">⚡</div>
+        <div class="forge-icon">🔥</div>
+        <div class="forge-icon">💎</div>
+        <div class="forge-icon">⚙️</div>
+    </div>
+    
+    <div class="container">
+        <div class="error-code">404</div>
+        <h1>Forge Not Found!</h1>
+        <h2>This forge got lost in the AI training data</h2>
+        
+        <div class="forge-message">
+            <h3>🔧 Forge Status: Temporarily Misplaced</h3>
+            <p>Don't worry, blacksmith! We've got plenty of amazing AI optimization tools for you to forge instead. 
+            Every great creation starts with a spark of inspiration!</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number">∞</div>
+                <div class="stat-label">AI Possibilities</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Open Source</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">🚀</div>
+                <div class="stat-label">Always Learning</div>
+            </div>
+        </div>
+        
+        <a href="/" class="btn btn-primary">🏠 Return to Forge</a>
+        <a href="/online" class="btn btn-secondary">🔧 Try Our Tools</a>
+        <button onclick="history.back()" class="btn btn-secondary">← Go Back</button>
+        
+        <div class="easter-egg">
+            💡 Pro tip: This 404 page is AI-friendly and ready for training! 
+            Even our error pages are optimized for the future! 🔥⚡
+        </div>
+    </div>
+</body>
+</html> 
