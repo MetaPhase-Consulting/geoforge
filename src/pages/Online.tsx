@@ -40,7 +40,26 @@ export default function Online() {
   const [generationProgress, setGenerationProgress] = useState({ progress: 0, status: '' });
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [analyzer, setAnalyzer] = useState<WebsiteAnalyzer | null>(null);
+  const [originalUrl, setOriginalUrl] = useState('');
 
+  const formatUrl = (url: string): string => {
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) return '';
+    
+    // Check if URL already has protocol
+    if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
+      return trimmedUrl;
+    }
+    
+    // Default to HTTPS for security
+    return `https://${trimmedUrl}`;
+  };
+
+  const handleUrlChange = (inputUrl: string) => {
+    setOriginalUrl(inputUrl);
+    const formattedUrl = formatUrl(inputUrl);
+    setConfig(prev => ({ ...prev, url: formattedUrl }));
+  };
   const handleAnalyze = async () => {
     if (!config.url) {
       setError('Please enter a valid URL');
@@ -161,12 +180,29 @@ export default function Online() {
                     <input
                       type="url"
                       value={config.url}
-                      onChange={(e) => setConfig(prev => ({ ...prev, url: e.target.value }))}
+                      onChange={(e) => handleUrlChange(e.target.value)}
                       placeholder="https://example.com"
                       className="w-full pl-12 pr-4 py-3 border border-silver/30 dark:border-silver/40 rounded-lg bg-white dark:bg-matte-bg text-charcoal dark:text-white font-work-sans focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition-colors placeholder:text-charcoal/50 dark:placeholder:text-silver/60"
                       disabled={isAnalyzing}
                     />
                   </div>
+                  
+                  {/* URL Format Indicator */}
+                  {originalUrl && originalUrl !== config.url && (
+                    <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
+                      <div className="text-sm font-work-sans">
+                        <div className="text-blue-700 dark:text-blue-200">
+                          <span className="font-medium">Original:</span> {originalUrl}
+                        </div>
+                        <div className="text-blue-700 dark:text-blue-200">
+                          <span className="font-medium">Updated:</span> {config.url}
+                        </div>
+                        <div className="text-blue-600 dark:text-blue-300 text-xs mt-1">
+                          ✓ Added HTTPS protocol for security
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
