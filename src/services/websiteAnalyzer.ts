@@ -226,100 +226,103 @@ export class WebsiteAnalyzer {
 
   private async fetchPage(url: string): Promise<string> {
     const startTime = Date.now();
-    const FETCH_TIMEOUT = 10000; // 10 seconds timeout
-    
+    const FETCH_TIMEOUT = 15000; // Increased timeout for proxies
+
+    console.log(`[fetchPage] Starting fetch for: ${url}`);
+
+    // --- Strategy 1: Direct Fetch ---
     try {
-      // Create timeout controller
+      console.log('[fetchPage] Attempting Strategy 1: Direct Fetch');
       const timeoutController = new AbortController();
       const timeoutId = setTimeout(() => timeoutController.abort(), FETCH_TIMEOUT);
       
-      // Combine user abort and timeout signals
       const combinedSignal = AbortSignal.any ? 
         AbortSignal.any([this.abortController.signal, timeoutController.signal]) :
         timeoutController.signal;
 
-      try {
-        // Try direct fetch first (will work for CORS-enabled sites)
-        const response = await fetch(url, {
-          signal: combinedSignal,
-          headers: {
-            'User-Agent': 'GEOforge-Analyzer/1.0',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-          }
-        });
+      const response = await fetch(url, {
+        signal: combinedSignal,
+        headers: {
+          'User-Agent': 'GEOforge-Analyzer/1.0',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        }
+      });
+      
+      clearTimeout(timeoutId);
 
-        clearTimeout(timeoutId);
+      if (response.ok) {
+        console.log('[fetchPage] Direct Fetch successful');
+        const content = await response.text();
         this.results.technical.responseTime = Date.now() - startTime;
         this.results.technical.statusCode = response.status;
         this.results.technical.contentType = response.headers.get('content-type') || '';
-        this.results.technical.contentLength = parseInt(response.headers.get('content-length') || '0');
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const content = await response.text();
+        this.results.technical.contentLength = content.length;
         return content;
-        
-      } catch (directFetchError) {
-        clearTimeout(timeoutId);
-        
-        // Check if it was a timeout
-        if (directFetchError instanceof Error && directFetchError.name === 'AbortError') {
-          if (timeoutController.signal.aborted) {
-            throw new Error(`Request timed out after ${FETCH_TIMEOUT / 1000} seconds. The website may be slow to respond or unreachable.`);
-          } else {
-            throw new Error('Analysis was cancelled by user');
-          }
-        }
-        
-        // Try CORS proxy as fallback
-        console.warn('Direct fetch failed, trying CORS proxy:', directFetchError);
-        
-        const proxyTimeoutController = new AbortController();
-        const proxyTimeoutId = setTimeout(() => proxyTimeoutController.abort(), FETCH_TIMEOUT);
+      }
+      console.warn(`[fetchPage] Direct Fetch failed with status: ${response.status}`);
+    } catch (error) {
+      console.warn('[fetchPage] Direct Fetch threw an error:', error);
+    }
+
+    // --- Strategy 2: Multi-Proxy Fallback ---
+    console.log('[fetchPage] Attempting Strategy 2: Multi-Proxy Fallback');
+    const proxies = [
+      { url: 'https://api.allorigins.win/get?url=', jsonField: 'contents' },
+      { url: 'https://corsproxy.io/?', jsonField: null },
+      { url: 'https://api.codetabs.com/v1/proxy?quest=', jsonField: 'body' }
+    ];
+
+    for (const proxy of proxies) {
+      const proxyUrl = `${proxy.url}${encodeURIComponent(url)}`;
+      console.log(`[fetchPage] Trying proxy: ${proxy.url}`);
+      try {
+        const timeoutController = new AbortController();
+        const timeoutId = setTimeout(() => timeoutController.abort(), FETCH_TIMEOUT);
         
         const proxySignal = AbortSignal.any ? 
-          AbortSignal.any([this.abortController.signal, proxyTimeoutController.signal]) :
-          proxyTimeoutController.signal;
+          AbortSignal.any([this.abortController.signal, timeoutController.signal]) :
+          timeoutController.signal;
 
-        try {
-          const proxyResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, {
-            signal: proxySignal
-          });
-          
-          clearTimeout(proxyTimeoutId);
-          
-          if (proxyResponse.ok) {
-            const proxyData = await proxyResponse.json();
-            this.results.technical.responseTime = Date.now() - startTime;
-            this.results.technical.statusCode = 200;
-            this.results.technical.contentType = 'text/html';
-            this.results.technical.contentLength = proxyData.contents.length;
-            return proxyData.contents;
+        const proxyResponse = await fetch(proxyUrl, { signal: proxySignal });
+        clearTimeout(timeoutId);
+
+        if (proxyResponse.ok) {
+          console.log(`[fetchPage] Proxy ${proxy.url} successful`);
+          let content = '';
+          if (proxy.jsonField) {
+            const data = await proxyResponse.json();
+            content = data[proxy.jsonField];
           } else {
-            throw new Error(`Proxy service returned HTTP ${proxyResponse.status}`);
-          }
-        } catch (proxyError) {
-          clearTimeout(proxyTimeoutId);
-          
-          if (proxyError instanceof Error && proxyError.name === 'AbortError') {
-            if (proxyTimeoutController.signal.aborted) {
-              throw new Error(`Request timed out after ${FETCH_TIMEOUT / 1000} seconds using proxy service. The website appears to be unreachable.`);
-            } else {
-              throw new Error('Analysis was cancelled by user');
-            }
+            content = await proxyResponse.text();
           }
           
-          // Both direct and proxy failed
-          throw new Error(`Unable to fetch website content. This could be due to:\n• CORS restrictions blocking direct access\n• Website is down or unreachable\n• Network connectivity issues\n• Website blocking automated requests\n\nOriginal error: ${directFetchError instanceof Error ? directFetchError.message : 'Network error'}`);
+          if (content) {
+            this.results.technical.responseTime = Date.now() - startTime;
+            this.results.technical.statusCode = 200; // Proxies usually return 200
+            this.results.technical.contentType = 'text/html'; // Assume HTML
+            this.results.technical.contentLength = content.length;
+            return content;
+          }
         }
+        console.warn(`[fetchPage] Proxy ${proxy.url} failed with status: ${proxyResponse.status}`);
+      } catch (error) {
+        console.warn(`[fetchPage] Proxy ${proxy.url} threw an error:`, error);
       }
-
-    } catch (error) {
-      // Re-throw the error as-is since we've already handled it above
-      throw error;
     }
+
+    // --- All Strategies Failed ---
+    console.error('[fetchPage] All fetch strategies failed.');
+    
+    let errorMessage = 'Unable to fetch website content. This could be due to:\n' +
+      '• Strict CORS policies blocking both direct and proxy access.\n' +
+      '• The website being down or unreachable.\n' +
+      '• The website actively blocking automated requests or proxies.';
+
+    if (url.includes('.gov') || url.includes('.mil')) {
+      errorMessage += '\n\nNote: Government and military websites often have strict security that blocks automated tools.';
+    }
+
+    throw new Error(errorMessage);
   }
 
   private generateSimulatedContent(url: string): string {
