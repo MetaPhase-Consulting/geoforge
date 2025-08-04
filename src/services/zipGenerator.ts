@@ -503,8 +503,6 @@ After deployment, verify the files are accessible:
 - **Training Allowed**: ${this.config.allowTraining ? 'Yes' : 'No'}
 - **Sitemap Included**: ${this.config.includeSitemap ? 'Yes' : 'No'}
 - **Humans.txt Included**: ${this.config.includeHumans ? 'Yes' : 'No'}
-- **Audit Mode**: ${this.config.auditMode}
-- **Max Crawl Depth**: ${this.config.maxDepth}
 
 ## Enabled AI Systems
 
