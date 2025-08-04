@@ -1,5 +1,5 @@
 import React from 'react';
-import { Hammer, Target, Users, Zap } from 'lucide-react';
+import { Hammer, Target, Users, Zap, Shield, AlertTriangle, User } from 'lucide-react';
 
 export default function About() {
   const features = [
@@ -159,6 +159,62 @@ export default function About() {
           >
             Contribute on GitHub
           </a>
+        </div>
+
+        {/* Terms & Conditions */}
+        <div className="mt-12">
+          <h2 className="font-orbitron text-3xl font-bold text-charcoal dark:text-white mb-8 text-center">
+            Terms & Conditions
+          </h2>
+          
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white dark:bg-charcoal rounded-2xl p-6 border border-gold/20 dark:border-gold/30 text-center">
+              <div className="w-16 h-16 mx-auto bg-blue-500 rounded-2xl flex items-center justify-center mb-4">
+                <Shield className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="font-orbitron text-xl font-bold text-charcoal dark:text-white mb-3">
+                Open Source License
+              </h3>
+              <p className="font-work-sans text-charcoal/70 dark:text-silver leading-relaxed text-sm">
+                This project is provided under an open source license. You are free to use, modify, and distribute the code.
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-charcoal rounded-2xl p-6 border border-gold/20 dark:border-gold/30 text-center">
+              <div className="w-16 h-16 mx-auto bg-blue-500 rounded-2xl flex items-center justify-center mb-4">
+                <AlertTriangle className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="font-orbitron text-xl font-bold text-charcoal dark:text-white mb-3">
+                No Warranty
+              </h3>
+              <p className="font-work-sans text-charcoal/70 dark:text-silver leading-relaxed text-sm">
+                This software is provided "as is" without warranty of any kind, express or implied. Use at your own risk.
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-charcoal rounded-2xl p-6 border border-gold/20 dark:border-gold/30 text-center">
+              <div className="w-16 h-16 mx-auto bg-blue-500 rounded-2xl flex items-center justify-center mb-4">
+                <User className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="font-orbitron text-xl font-bold text-charcoal dark:text-white mb-3">
+                User Responsibility
+              </h3>
+              <p className="font-work-sans text-charcoal/70 dark:text-silver leading-relaxed text-sm">
+                Users are responsible for ensuring compliance with all applicable licenses and regulations when using GEOforge.
+              </p>
+            </div>
+          </div>
+          <div className="bg-white dark:bg-charcoal rounded-2xl p-8 border border-gold/20 dark:border-gold/30">
+            <h3 className="font-orbitron text-2xl font-bold text-charcoal dark:text-white mb-4 text-center">
+              Important Notice
+            </h3>
+            <p className="font-work-sans text-charcoal/80 dark:text-silver leading-relaxed text-center max-w-4xl mx-auto">
+              By using GEOforge, you acknowledge that this is open source software provided free of charge. While we strive for 
+              quality and reliability, users assume full responsibility for testing, validation, and compliance with all applicable 
+              software licenses and regulations. We recommend reviewing the terms of any AI platforms or services you choose to 
+              optimize for in your projects.
+            </p>
+          </div>
         </div>
       </div>
     </div>
