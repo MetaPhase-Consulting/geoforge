@@ -1,7 +1,29 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "geoforge",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
+  "description": "Generate AI-ready optimization files for websites, including robots.txt, sitemaps, and vendor-specific AI manifests",
+  "keywords": [
+    "ai",
+    "seo",
+    "robots.txt",
+    "sitemap",
+    "optimization",
+    "crawler",
+    "openai",
+    "anthropic",
+    "perplexity"
+  ],
+  "author": "Brian Funk",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brianfunk/geoforge.git"
+  },
+  "homepage": "https://geoforge.dev",
+  "bugs": {
+    "url": "https://github.com/brianfunk/geoforge/issues"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -32,6 +54,6 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
-    "vite": "^5.4.2"
+    "vite": "^7.0.6"
   }
 }

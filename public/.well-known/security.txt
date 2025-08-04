@@ -1,0 +1,8 @@
+# Security Policy for GEOforge
+# This file provides security contact information
+
+Contact: https://geoforge.dev/security
+Expires: 2026-08-03T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://geoforge.dev/.well-known/security.txt
+Policy: https://geoforge.dev/SECURITY.md

@@ -1,0 +1,9 @@
+# GEOforge App-Ads.txt
+# This file is used to declare authorized digital sellers for mobile app advertising
+
+# No authorized sellers at this time
+# This file is present for compliance with mobile advertising standards
+# For more information: https://iabtechlab.com/app-ads-txt/
+
+# Last updated: 2025-08-03
+# Contact: Available through our contact form 
