@@ -1,0 +1,26 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="colorGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4AF37;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F4D03F;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer ring -->
+  <circle cx="40" cy="40" r="35" stroke="url(#colorGradient)" stroke-width="3" fill="none"/>
+  
+  <!-- Inner geometric pattern -->
+  <g transform="translate(40,40)">
+    <!-- Central hexagon -->
+    <polygon points="-8,-14 8,-14 16,0 8,14 -8,14 -16,0" fill="url(#colorGradient)" opacity="0.8"/>
+    
+    <!-- Surrounding triangles -->
+    <polygon points="0,-20 -12,-8 12,-8" fill="url(#colorGradient)" opacity="0.6"/>
+    <polygon points="20,0 8,12 8,-12" fill="url(#colorGradient)" opacity="0.6"/>
+    <polygon points="0,20 12,8 -12,8" fill="url(#colorGradient)" opacity="0.6"/>
+    <polygon points="-20,0 -8,-12 -8,12" fill="url(#colorGradient)" opacity="0.6"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="40" y="68" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="url(#colorGradient)">MetaPhase</text>
+</svg>

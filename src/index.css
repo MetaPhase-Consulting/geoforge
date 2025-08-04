@@ -1,0 +1,215 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Work+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply transition-colors duration-300;
+  }
+  
+  body {
+    @apply transition-colors duration-300;
+  }
+}
+
+@layer base {
+  :root {
+    --gold-core: #D4AF37;
+    --gold-light: #F5DFA2;
+    --charcoal: #222222;
+    --silver: #8A8F98;
+    --matte-bg: #181818;
+  }
+  
+  /* Ensure proper contrast ratios */
+  .dark {
+    --text-primary: #ffffff;
+    --text-secondary: #8A8F98;
+    --text-muted: rgba(138, 143, 152, 0.8);
+    --bg-primary: #222222;
+    --bg-secondary: #181818;
+    --border-primary: rgba(212, 175, 55, 0.3);
+  }
+  
+  .light {
+    --text-primary: #222222;
+    --text-secondary: rgba(34, 34, 34, 0.7);
+    --text-muted: rgba(34, 34, 34, 0.5);
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --border-primary: rgba(212, 175, 55, 0.2);
+  }
+}
+
+@layer utilities {
+  .font-orbitron {
+    font-family: 'Orbitron', 'IBM Plex Sans', sans-serif;
+  }
+  
+  .font-work-sans {
+    font-family: 'Work Sans', sans-serif;
+  }
+  
+  .font-mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  
+  .text-gold {
+    color: var(--gold-core);
+  }
+  
+  .text-silver {
+    color: var(--silver);
+  }
+  
+  .text-charcoal {
+    color: var(--charcoal);
+  }
+  
+  .bg-gold {
+    background-color: var(--gold-core);
+  }
+  
+  .bg-gold-light {
+    background-color: var(--gold-light);
+  }
+  
+  .bg-charcoal {
+    background-color: var(--charcoal);
+  }
+  
+  .bg-silver {
+    background-color: var(--silver);
+  }
+  
+  .bg-matte-bg {
+    background-color: var(--matte-bg);
+  }
+  
+  .border-gold {
+    border-color: var(--gold-core);
+  }
+  
+  .border-silver {
+    border-color: var(--silver);
+  }
+  
+  .shimmer-text {
+    background: linear-gradient(110deg, var(--gold-core) 0%, var(--gold-light) 25%, var(--gold-core) 50%, var(--gold-light) 75%, var(--gold-core) 100%);
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+  
+  .shimmer-gold {
+    background: linear-gradient(110deg, var(--gold-core) 0%, var(--gold-light) 25%, var(--gold-core) 50%, var(--gold-light) 75%, var(--gold-core) 100%);
+    background-size: 200% 100%;
+    animation: shimmer-gold 2.5s ease-in-out infinite;
+  }
+  
+  .shimmer-silver {
+    background: linear-gradient(110deg, var(--silver) 0%, #B8BCC8 25%, var(--silver) 50%, #B8BCC8 75%, var(--silver) 100%);
+    background-size: 200% 100%;
+    animation: shimmer-silver 3s ease-in-out infinite;
+  }
+  
+  .shimmer-gold-slow {
+    background: linear-gradient(110deg, var(--gold-core) 0%, var(--gold-light) 25%, var(--gold-core) 50%, var(--gold-light) 75%, var(--gold-core) 100%);
+    background-size: 200% 100%;
+    animation: shimmer-gold-slow 6s ease-in-out infinite;
+  }
+  
+  .shimmer-silver-slow {
+    background: linear-gradient(110deg, var(--silver) 0%, #B8BCC8 25%, var(--silver) 50%, #B8BCC8 75%, var(--silver) 100%);
+    background-size: 200% 100%;
+    animation: shimmer-silver-slow 6s ease-in-out infinite;
+  }
+  
+  @keyframes shimmer {
+    0%, 100% {
+      background-position: 200% 0;
+    }
+    50% {
+      background-position: -200% 0;
+    }
+  }
+  
+  @keyframes shimmer-gold {
+    0%, 100% {
+      background-position: 200% 0;
+    }
+    50% {
+      background-position: -200% 0;
+    }
+  }
+  
+  @keyframes shimmer-silver {
+    0%, 100% {
+      background-position: 200% 0;
+    }
+    50% {
+      background-position: -200% 0;
+    }
+  }
+  
+  @keyframes shimmer-gold-slow {
+    0%, 100% {
+      background-position: 200% 0;
+    }
+    50% {
+      background-position: -200% 0;
+    }
+  }
+  
+  @keyframes shimmer-silver-slow {
+    0%, 100% {
+      background-position: 200% 0;
+    }
+    50% {
+      background-position: -200% 0;
+    }
+  }
+  
+  .gold-light\/20 {
+    background-color: rgba(245, 223, 162, 0.2);
+  }
+  
+  .gold\/20 {
+    background-color: rgba(212, 175, 55, 0.2);
+  }
+  
+  .gold\/30 {
+    border-color: rgba(212, 175, 55, 0.3);
+  }
+  
+  .gold\/10 {
+    background-color: rgba(212, 175, 55, 0.1);
+  }
+  
+  .gold\/25 {
+    box-shadow: 0 25px 50px -12px rgba(212, 175, 55, 0.25);
+  }
+  
+  .silver\/10 {
+    background-color: rgba(138, 143, 152, 0.1);
+  }
+  
+  .silver\/40 {
+    color: rgba(138, 143, 152, 0.4);
+  }
+  
+  .silver\/80 {
+    color: rgba(138, 143, 152, 0.8);
+  }
+  
+  .silver\/90 {
+    color: rgba(138, 143, 152, 0.9);
+  }
+  
+  .gold\/60 {
+    color: rgba(212, 175, 55, 0.6);
+  }
+}
