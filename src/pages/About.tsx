@@ -125,8 +125,8 @@ export default function About() {
           
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white dark:bg-charcoal rounded-2xl p-6 border border-gold/20 dark:border-gold/30 text-center">
-              <div className="w-16 h-16 mx-auto bg-blue-500 rounded-2xl flex items-center justify-center mb-4">
-                <Shield className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 mx-auto bg-gold/10 dark:bg-gold/20 rounded-2xl flex items-center justify-center mb-4">
+                <Shield className="w-8 h-8 text-gold" />
               </div>
               <h3 className="font-orbitron text-xl font-bold text-charcoal dark:text-white mb-3">
                 Open Source License
@@ -137,8 +137,8 @@ export default function About() {
             </div>
 
             <div className="bg-white dark:bg-charcoal rounded-2xl p-6 border border-gold/20 dark:border-gold/30 text-center">
-              <div className="w-16 h-16 mx-auto bg-blue-500 rounded-2xl flex items-center justify-center mb-4">
-                <AlertTriangle className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 mx-auto bg-gold/10 dark:bg-gold/20 rounded-2xl flex items-center justify-center mb-4">
+                <AlertTriangle className="w-8 h-8 text-gold" />
               </div>
               <h3 className="font-orbitron text-xl font-bold text-charcoal dark:text-white mb-3">
                 No Warranty
@@ -149,8 +149,8 @@ export default function About() {
             </div>
 
             <div className="bg-white dark:bg-charcoal rounded-2xl p-6 border border-gold/20 dark:border-gold/30 text-center">
-              <div className="w-16 h-16 mx-auto bg-blue-500 rounded-2xl flex items-center justify-center mb-4">
-                <User className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 mx-auto bg-gold/10 dark:bg-gold/20 rounded-2xl flex items-center justify-center mb-4">
+                <User className="w-8 h-8 text-gold" />
               </div>
               <h3 className="font-orbitron text-xl font-bold text-charcoal dark:text-white mb-3">
                 User Responsibility
