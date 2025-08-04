@@ -23,3 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Test output directories
+test-output/
+geoforge-output/
+coverage/
+*.zip

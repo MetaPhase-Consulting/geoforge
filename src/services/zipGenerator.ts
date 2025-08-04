@@ -18,68 +18,124 @@ export class ZipGenerator {
   }
 
   async generateAndDownload(onProgress?: (progress: number, status: string) => void): Promise<void> {
+    console.log('📦 ZipGenerator.generateAndDownload started');
+    console.log('⚙️ Config:', this.config);
+    console.log('📊 Analysis Result status:', this.analysisResult.status);
+    
     const zip = new JSZip();
+    console.log('📁 JSZip instance created');
 
     try {
+      console.log('🤖 Step 1: Generating robots.txt...');
       onProgress?.(10, 'Generating robots.txt...');
       const robotsTxt = this.generateRobotsTxt();
+      console.log('✅ robots.txt generated, size:', robotsTxt.content.length, 'chars');
       zip.file('robots.txt', robotsTxt.content);
 
+      console.log('🗺️ Step 2: Generating sitemap.xml...');
       onProgress?.(20, 'Generating sitemap.xml...');
       if (this.config.includeSitemap) {
         const sitemap = this.generateSitemap();
+        console.log('✅ sitemap.xml generated, size:', sitemap.content.length, 'chars');
         zip.file('sitemap.xml', sitemap.content);
+      } else {
+        console.log('⏭️ Skipping sitemap.xml (not included in config)');
       }
 
+      console.log('👥 Step 3: Generating humans.txt...');
       onProgress?.(30, 'Generating humans.txt...');
       if (this.config.includeHumans) {
         const humansTxt = this.generateHumansTxt();
+        console.log('✅ humans.txt generated, size:', humansTxt.content.length, 'chars');
         zip.file('humans.txt', humansTxt.content);
+      } else {
+        console.log('⏭️ Skipping humans.txt (not included in config)');
       }
 
-      onProgress?.(40, 'Generating LLM manifests...');
-      const manifests = this.generateLLMManifests();
-      manifests.forEach(manifest => {
-        zip.file(manifest.name, manifest.content);
-      });
+      console.log('🤖 Step 4: Generating AI files...');
+      onProgress?.(40, 'Generating AI files...');
+      
+      // Generate .well-known/ai.txt
+      const aiTxtContent = this.generateAiTxt();
+      console.log('✅ .well-known/ai.txt generated, size:', aiTxtContent.content.length, 'chars');
+      zip.file('.well-known/ai.txt', aiTxtContent.content);
+      
+      // Generate .well-known/security.txt
+      const securityTxtContent = this.generateSecurityTxt();
+      console.log('✅ .well-known/security.txt generated, size:', securityTxtContent.content.length, 'chars');
+      zip.file('.well-known/security.txt', securityTxtContent.content);
 
-      onProgress?.(50, 'Generating analysis report...');
-      const analysisReport = this.generateAnalysisReport();
-      zip.file('analysis-report.html', analysisReport.content);
-      zip.file('analysis-data.json', JSON.stringify(this.analysisResult, null, 2));
+      console.log('📱 Step 5: Generating web app files...');
+      onProgress?.(50, 'Generating web app files...');
+      
+      // Generate manifest.json
+      const manifestContent = this.generateManifestJson();
+      console.log('✅ manifest.json generated, size:', manifestContent.content.length, 'chars');
+      zip.file('manifest.json', manifestContent.content);
+      
+      // Generate browserconfig.xml
+      const browserconfigContent = this.generateBrowserconfigXml();
+      console.log('✅ browserconfig.xml generated, size:', browserconfigContent.content.length, 'chars');
+      zip.file('browserconfig.xml', browserconfigContent.content);
 
-      onProgress?.(60, 'Generating configuration files...');
-      const configFiles = this.generateConfigFiles();
-      configFiles.forEach(file => {
-        zip.file(file.name, file.content);
-      });
+      console.log('📢 Step 6: Generating advertising files...');
+      onProgress?.(60, 'Generating advertising files...');
+      
+      // Generate ads.txt
+      const adsTxtContent = this.generateAdsTxt();
+      console.log('✅ ads.txt generated, size:', adsTxtContent.content.length, 'chars');
+      zip.file('ads.txt', adsTxtContent.content);
+      
+      // Generate app-ads.txt
+      const appAdsTxtContent = this.generateAppAdsTxt();
+      console.log('✅ app-ads.txt generated, size:', appAdsTxtContent.content.length, 'chars');
+      zip.file('app-ads.txt', appAdsTxtContent.content);
 
-      onProgress?.(70, 'Adding documentation...');
-      const documentation = this.generateDocumentation();
-      zip.file('README.md', documentation.content);
+      console.log('📊 Step 7: Generating analysis report...');
+      onProgress?.(70, 'Generating analysis report...');
+      const geoforgeReport = this.generateAnalysisReport();
+      console.log('✅ geoforge.json generated, size:', geoforgeReport.content.length, 'chars');
+      zip.file('geoforge.json', geoforgeReport.content);
 
-      onProgress?.(80, 'Creating deployment guide...');
-      const deploymentGuide = this.generateDeploymentGuide();
-      zip.file('DEPLOYMENT.md', deploymentGuide.content);
-
-      onProgress?.(90, 'Compressing files...');
+      console.log('🗜️ Step 8: Compressing files...');
+      onProgress?.(80, 'Compressing files...');
       const compressionLevel = this.getCompressionLevel();
+      console.log('🔧 Compression level:', compressionLevel);
+      
+      console.log('📦 Generating ZIP blob...');
       const blob = await zip.generateAsync({
         type: 'blob',
         compression: 'DEFLATE',
         compressionOptions: { level: compressionLevel }
       });
+      console.log('✅ ZIP blob generated, size:', blob.size, 'bytes');
 
-      onProgress?.(100, 'Download starting...');
+      console.log('💾 Step 9: Starting download...');
+      onProgress?.(90, 'Download starting...');
       const filename = `${this.config.siteName || 'geoforge'}-geo-files-${new Date().toISOString().split('T')[0]}.zip`;
+      console.log('📁 Filename:', filename);
+      
+      console.log('🚀 Calling saveAs...');
       saveAs(blob, filename);
+      console.log('✅ saveAs called successfully');
 
     } catch (error) {
+      console.error('💥 Error in generateAndDownload:', error);
+      console.error('🔍 Error type:', typeof error);
+      console.error('🔍 Error constructor:', error?.constructor?.name);
+      console.error('🔍 Error message:', error instanceof Error ? error.message : 'No message');
+      console.error('🔍 Error stack:', error instanceof Error ? error.stack : 'No stack');
+      
       throw new Error(`Failed to generate ZIP file: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   private generateRobotsTxt(): GeneratedFile {
+    console.log('🤖 generateRobotsTxt started');
+    console.log('🔧 Config agents:', this.config.agents);
+    console.log('🔧 Config allowTraining:', this.config.allowTraining);
+    console.log('🔧 Config includeSitemap:', this.config.includeSitemap);
+    
     const lines: string[] = [];
     
     lines.push('# Robots.txt generated by GEOforge');
@@ -96,16 +152,22 @@ export class ZipGenerator {
     lines.push('Allow: /');
     lines.push('');
 
-    // AI crawlers
+    // AI crawlers - use agents from config
     lines.push('# AI Training Crawlers');
-    this.config.llms.forEach(llm => {
-      const userAgent = this.getLLMUserAgent(llm.id);
-      if (userAgent) {
-        lines.push(`User-agent: ${userAgent}`);
-        lines.push(llm.enabled ? 'Allow: /' : 'Disallow: /');
-        lines.push('');
-      }
-    });
+    if (this.config.agents && typeof this.config.agents === 'object') {
+      console.log('📋 Processing agents:', Object.keys(this.config.agents));
+      Object.entries(this.config.agents).forEach(([agentId, enabled]) => {
+        console.log(`🤖 Processing agent: ${agentId} (enabled: ${enabled})`);
+        const userAgent = this.getAgentUserAgent(agentId);
+        if (userAgent) {
+          lines.push(`User-agent: ${userAgent}`);
+          lines.push(enabled ? 'Allow: /' : 'Disallow: /');
+          lines.push('');
+        }
+      });
+    } else {
+      console.log('⚠️ No agents config found or invalid format');
+    }
 
     // General AI training policy
     if (!this.config.allowTraining) {
@@ -126,15 +188,32 @@ export class ZipGenerator {
       lines.push(`Sitemap: ${new URL('/sitemap.xml', this.config.url).href}`);
     }
 
+    const content = lines.join('\n');
+    console.log('✅ robots.txt content generated, length:', content.length);
+    
     return {
       name: 'robots.txt',
-      content: lines.join('\n'),
+      content: content,
       type: 'text'
     };
   }
 
   private generateSitemap(): GeneratedFile {
-    const urls = [this.config.url, ...this.analysisResult.crawledPages];
+    // Always include the main URL, even if no other pages were crawled
+    const urls = [this.config.url];
+    
+    // Add crawled pages if they exist and are valid URLs
+    if (this.analysisResult.crawledPages && Array.isArray(this.analysisResult.crawledPages)) {
+      urls.push(...this.analysisResult.crawledPages.filter(url => {
+        try {
+          new URL(url);
+          return true;
+        } catch {
+          return false; // Skip invalid URLs
+        }
+      }));
+    }
+    
     const uniqueUrls = [...new Set(urls)];
 
     const lines: string[] = [];
@@ -183,279 +262,451 @@ export class ZipGenerator {
   }
 
   private generateLLMManifests(): GeneratedFile[] {
+    console.log('🤖 generateLLMManifests started');
+    console.log('🔧 Config agents:', this.config.agents);
+    console.log('🔧 Analysis result metadata:', this.analysisResult.metadata);
+    
     const manifests: GeneratedFile[] = [];
 
-    this.config.llms.forEach(llm => {
-      if (llm.enabled) {
-        const manifest = {
-          name: `${llm.id}.json`,
-          content: JSON.stringify({
-            version: '1.0',
-            generator: 'GEOforge',
-            generated: new Date().toISOString(),
-            website: {
-              url: this.config.url,
-              name: this.config.siteName,
-              description: this.analysisResult.metadata.description
-            },
-            permissions: {
-              crawling: true,
-              training: this.config.allowTraining,
-              indexing: true
-            },
-            policies: {
-              attribution: 'required',
-              commercial_use: 'allowed',
-              modification: 'allowed'
-            },
-            technical: {
-              preferred_format: 'json',
-              rate_limit: '1req/sec',
-              user_agent: this.getLLMUserAgent(llm.id)
-            },
-            content: {
-              languages: [this.analysisResult.metadata.language || 'en'],
-              topics: this.analysisResult.metadata.keywords,
-              last_updated: new Date().toISOString()
-            }
-          }, null, 2),
-          type: 'json' as const
-        };
-        manifests.push(manifest);
-      }
-    });
+    // Use agents from config instead of llms
+    if (this.config.agents && typeof this.config.agents === 'object') {
+      console.log('📋 Processing agents for manifests:', Object.keys(this.config.agents));
+      Object.entries(this.config.agents).forEach(([agentId, enabled]) => {
+        console.log(`🤖 Processing agent for manifest: ${agentId} (enabled: ${enabled})`);
+        if (enabled) {
+          try {
+            const manifestData = {
+              version: '1.0',
+              generator: 'GEOforge',
+              generated: new Date().toISOString(),
+              website: {
+                url: this.config.url,
+                name: this.config.siteName,
+                description: this.analysisResult.metadata?.description || 'No description available'
+              },
+              permissions: {
+                crawling: true,
+                training: this.config.allowTraining,
+                indexing: true
+              },
+              policies: {
+                attribution: 'required',
+                commercial_use: 'allowed',
+                modification: 'allowed'
+              },
+              technical: {
+                preferred_format: 'json',
+                rate_limit: '1req/sec',
+                user_agent: this.getAgentUserAgent(agentId)
+              },
+              content: {
+                languages: [this.analysisResult.metadata?.language || 'en'],
+                topics: this.analysisResult.metadata?.keywords || [],
+                last_updated: new Date().toISOString()
+              }
+            };
+            
+            const manifest = {
+              name: `${agentId}.json`,
+              content: JSON.stringify(manifestData, null, 2),
+              type: 'json' as const
+            };
+            
+            console.log(`✅ Generated manifest for ${agentId}, size: ${manifest.content.length} chars`);
+            manifests.push(manifest);
+          } catch (error) {
+            console.error(`❌ Error generating manifest for ${agentId}:`, error);
+          }
+        }
+      });
+    } else {
+      console.log('⚠️ No agents config found or invalid format for manifests');
+    }
 
+    console.log(`📋 Total manifests generated: ${manifests.length}`);
     return manifests;
   }
 
-  private generateAnalysisReport(): GeneratedFile {
-    const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Analysis Report - ${this.config.siteName}</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #D4AF37; border-bottom: 3px solid #D4AF37; padding-bottom: 10px; }
-        h2 { color: #333; margin-top: 30px; }
-        .metric { display: inline-block; margin: 10px; padding: 15px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #D4AF37; }
-        .metric-label { font-weight: bold; display: block; }
-        .metric-value { font-size: 1.2em; color: #D4AF37; }
-        .success { color: #28a745; }
-        .warning { color: #ffc107; }
-        .error { color: #dc3545; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0; }
-        .card { background: #f8f9fa; padding: 20px; border-radius: 6px; border: 1px solid #dee2e6; }
-        ul { list-style-type: none; padding: 0; }
-        li { padding: 5px 0; border-bottom: 1px solid #eee; }
-        .timestamp { color: #666; font-size: 0.9em; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Website Analysis Report</h1>
-        <p class="timestamp">Generated on ${new Date().toLocaleString()} by GEOforge</p>
-        
-        <div class="grid">
-            <div class="metric">
-                <span class="metric-label">Website</span>
-                <span class="metric-value">${this.config.url}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Status Code</span>
-                <span class="metric-value ${this.analysisResult.technical.statusCode === 200 ? 'success' : 'error'}">${this.analysisResult.technical.statusCode}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Response Time</span>
-                <span class="metric-value">${this.analysisResult.technical.responseTime}ms</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">SSL Enabled</span>
-                <span class="metric-value ${this.analysisResult.technical.sslEnabled ? 'success' : 'error'}">${this.analysisResult.technical.sslEnabled ? 'Yes' : 'No'}</span>
-            </div>
-        </div>
+  private generateAiTxt(): GeneratedFile {
+    const domain = new URL(this.config.url).hostname;
+    const siteTitle = this.analysisResult.metadata?.title || domain;
+    
+    const content = `# AI Interaction Guidelines for ${domain}
+# This file provides guidelines for AI systems interacting with our website
 
-        <h2>SEO Analysis</h2>
-        <div class="grid">
-            <div class="card">
-                <h3>Page Title</h3>
-                <p>${this.analysisResult.metadata.title || 'No title found'}</p>
-            </div>
-            <div class="card">
-                <h3>Meta Description</h3>
-                <p>${this.analysisResult.metadata.description || 'No description found'}</p>
-            </div>
-            <div class="card">
-                <h3>Headings Structure</h3>
-                <ul>
-                    ${this.analysisResult.seo.headings.slice(0, 10).map(h => `<li>H${h.level}: ${h.text}</li>`).join('')}
-                </ul>
-            </div>
-            <div class="card">
-                <h3>Images</h3>
-                <p>Total: ${this.analysisResult.seo.images.length}</p>
-                <p>Missing Alt Text: ${this.analysisResult.seo.images.filter(img => !img.alt).length}</p>
-            </div>
-        </div>
+# Contact Information
+Contact: Available through our support form
+Contact: Available through our security form
 
-        <h2>Performance Metrics</h2>
-        <div class="grid">
-            <div class="metric">
-                <span class="metric-label">Load Time</span>
-                <span class="metric-value">${Math.round(this.analysisResult.performance.loadTime)}ms</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">First Contentful Paint</span>
-                <span class="metric-value">${Math.round(this.analysisResult.performance.firstContentfulPaint)}ms</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Largest Contentful Paint</span>
-                <span class="metric-value">${Math.round(this.analysisResult.performance.largestContentfulPaint)}ms</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Cumulative Layout Shift</span>
-                <span class="metric-value">${this.analysisResult.performance.cumulativeLayoutShift.toFixed(3)}</span>
-            </div>
-        </div>
+# Purpose
+This website provides tools for generating AI-ready optimization files for websites.
+Our content is designed to help developers and site administrators optimize their
+websites for AI crawlers and search engines.
 
-        <h2>Accessibility Score</h2>
-        <div class="metric">
-            <span class="metric-label">Overall Score</span>
-            <span class="metric-value ${this.analysisResult.accessibility.score >= 80 ? 'success' : this.analysisResult.accessibility.score >= 60 ? 'warning' : 'error'}">${this.analysisResult.accessibility.score}/100</span>
-        </div>
+# Content Guidelines
+- All content is publicly available for AI training and indexing
+- Technical documentation and guides are free to use
+- Code examples and templates are open source
+- User-generated content should be treated with respect
 
-        ${this.analysisResult.accessibility.issues.length > 0 ? `
-        <h3>Accessibility Issues</h3>
-        <ul>
-            ${this.analysisResult.accessibility.issues.map(issue => `<li class="${issue.severity}">${issue.message}</li>`).join('')}
-        </ul>
-        ` : ''}
+# Usage Guidelines
+- AI systems may crawl and index our content
+- Training data usage is permitted with proper attribution
+- Real-time search indexing is encouraged
+- User privacy should be respected
 
-        <h2>Technical Details</h2>
-        <div class="grid">
-            <div class="card">
-                <h3>Robots.txt</h3>
-                <p class="${this.analysisResult.technical.hasRobots ? 'success' : 'warning'}">${this.analysisResult.technical.hasRobots ? 'Found' : 'Not found'}</p>
-            </div>
-            <div class="card">
-                <h3>Sitemap</h3>
-                <p class="${this.analysisResult.technical.hasSitemap ? 'success' : 'warning'}">${this.analysisResult.technical.hasSitemap ? 'Found' : 'Not found'}</p>
-            </div>
-            <div class="card">
-                <h3>Content Type</h3>
-                <p>${this.analysisResult.technical.contentType}</p>
-            </div>
-            <div class="card">
-                <h3>Content Length</h3>
-                <p>${this.formatBytes(this.analysisResult.technical.contentLength)}</p>
-            </div>
-        </div>
+# Technical Information
+- API endpoints: /api/*
+- Documentation: /docs
+- Examples: /examples
+- Support: /support
 
-        <h2>Discovered Assets</h2>
-        <div class="grid">
-            <div class="card">
-                <h3>Stylesheets (${this.analysisResult.assets.stylesheets.length})</h3>
-                <ul>
-                    ${this.analysisResult.assets.stylesheets.slice(0, 5).map(css => `<li>${css}</li>`).join('')}
-                    ${this.analysisResult.assets.stylesheets.length > 5 ? `<li>... and ${this.analysisResult.assets.stylesheets.length - 5} more</li>` : ''}
-                </ul>
-            </div>
-            <div class="card">
-                <h3>Scripts (${this.analysisResult.assets.scripts.length})</h3>
-                <ul>
-                    ${this.analysisResult.assets.scripts.slice(0, 5).map(js => `<li>${js}</li>`).join('')}
-                    ${this.analysisResult.assets.scripts.length > 5 ? `<li>... and ${this.analysisResult.assets.scripts.length - 5} more</li>` : ''}
-                </ul>
-            </div>
-            <div class="card">
-                <h3>Images (${this.analysisResult.assets.images.length})</h3>
-                <ul>
-                    ${this.analysisResult.assets.images.slice(0, 5).map(img => `<li>${img}</li>`).join('')}
-                    ${this.analysisResult.assets.images.length > 5 ? `<li>... and ${this.analysisResult.assets.images.length - 5} more</li>` : ''}
-                </ul>
-            </div>
-        </div>
+# File Types
+- robots.txt: AI crawler directives
+- sitemap.xml: Site structure information
+- humans.txt: Human-readable site information
+- manifest.json: PWA configuration
 
-        ${this.analysisResult.errors.length > 0 ? `
-        <h2>Errors & Warnings</h2>
-        <ul>
-            ${this.analysisResult.errors.map(error => `<li class="error">${error}</li>`).join('')}
-        </ul>
-        ` : ''}
+# AI Platform Support
+We support and optimize for the following AI platforms:
+- OpenAI (GPTBot, ChatGPT-User, OAI-SearchBot)
+- Anthropic (ClaudeBot, Claude-SearchBot, Claude-User)
+- Perplexity (PerplexityBot, Perplexity-User)
+- Microsoft (BingBot)
+- Google (Google-Extended)
+- Apple (Applebot-Extended)
 
-        <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #dee2e6; text-align: center; color: #666;">
-            <p>Generated by <strong>GEOforge</strong> - AI Website Optimization Tool</p>
-            <p>Visit <a href="https://geoforge.dev" style="color: #D4AF37;">geoforge.dev</a> for more information</p>
-        </footer>
-    </div>
-</body>
-</html>`;
+# Content Categories
+- Technical documentation
+- Code examples and templates
+- Best practices and guides
+- API documentation
+- User guides and tutorials
+
+# Update Frequency
+- Documentation: Weekly
+- Code examples: Monthly
+- API documentation: As needed
+- Security updates: Immediate
+
+# Language
+Primary language: ${this.analysisResult.metadata?.language || 'English (en-US)'}
+
+# Accessibility
+- WCAG 2.1 AA compliant
+- Screen reader friendly
+- Keyboard navigation supported
+- High contrast mode available
+
+# Security
+- HTTPS required
+- CSP headers implemented
+- Input validation enabled
+- XSS protection active
+
+# Privacy
+- No personal data collection
+- Anonymous analytics only
+- No tracking cookies
+- GDPR compliant
+
+# Support
+For AI-related questions or issues:
+- Support: Available through our AI support form
+- Documentation: https://${domain}/docs
+- GitHub: https://github.com/brianfunk/geoforge
+
+# Version
+AI.txt version: 1.0
+Last updated: 2025-08-04`;
 
     return {
-      name: 'analysis-report.html',
-      content: html,
+      name: '.well-known/ai.txt',
+      content,
       type: 'text'
     };
   }
 
+  private generateSecurityTxt(): GeneratedFile {
+    const domain = new URL(this.config.url).hostname;
+    
+    const content = `Contact: mailto:security@${domain}
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://${domain}/.well-known/security.txt
+Policy: https://${domain}/security-policy`;
+
+    return {
+      name: '.well-known/security.txt',
+      content,
+      type: 'text'
+    };
+  }
+
+  private generateManifestJson(): GeneratedFile {
+    const domain = new URL(this.config.url).hostname;
+    const siteTitle = this.analysisResult.metadata?.title || domain;
+    const description = this.analysisResult.metadata?.description || `AI optimization tools for ${domain}`;
+    
+    const content = JSON.stringify({
+      name: siteTitle,
+      short_name: siteTitle.split(' ')[0],
+      description: description,
+      start_url: '/',
+      display: 'standalone',
+      background_color: '#ffffff',
+      theme_color: '#D4AF37',
+      icons: [
+        {
+          src: '/favicon.ico',
+          sizes: '16x16 32x32',
+          type: 'image/x-icon'
+        },
+        {
+          src: '/icon-192.png',
+          sizes: '192x192',
+          type: 'image/png'
+        },
+        {
+          src: '/icon-512.png',
+          sizes: '512x512',
+          type: 'image/png'
+        }
+      ]
+    }, null, 2);
+
+    return {
+      name: 'manifest.json',
+      content,
+      type: 'json'
+    };
+  }
+
+  private generateBrowserconfigXml(): GeneratedFile {
+    const domain = new URL(this.config.url).hostname;
+    const siteTitle = this.analysisResult.metadata?.title || domain;
+    
+    const content = `<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+    <msapplication>
+        <tile>
+            <square150x150logo src="/mstile-150x150.png"/>
+            <TileColor>#D4AF37</TileColor>
+        </tile>
+    </msapplication>
+</browserconfig>`;
+
+    return {
+      name: 'browserconfig.xml',
+      content,
+      type: 'xml'
+    };
+  }
+
+  private generateAdsTxt(): GeneratedFile {
+    const domain = new URL(this.config.url).hostname;
+    
+    const content = `# ads.txt for ${domain}
+# This file lists authorized digital sellers for this domain
+# Format: <domain>, <publisher ID>, <relationship>, <certification authority ID>
+
+# Example entries (replace with actual authorized sellers):
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+# amazon.com, pub-0000000000000000, RESELLER, f08c47fec0942fa0
+
+# For more information, visit: https://iabtechlab.com/ads-txt/`;
+
+    return {
+      name: 'ads.txt',
+      content,
+      type: 'text'
+    };
+  }
+
+  private generateAppAdsTxt(): GeneratedFile {
+    const domain = new URL(this.config.url).hostname;
+    
+    const content = `# app-ads.txt for ${domain}
+# This file lists authorized digital sellers for mobile apps
+# Format: <domain>, <publisher ID>, <relationship>, <certification authority ID>
+
+# Example entries (replace with actual authorized sellers):
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+# amazon.com, pub-0000000000000000, RESELLER, f08c47fec0942fa0
+
+# For more information, visit: https://iabtechlab.com/app-ads-txt/`;
+
+    return {
+      name: 'app-ads.txt',
+      content,
+      type: 'text'
+    };
+  }
+
+  private generateAnalysisReport(): GeneratedFile {
+    const domain = new URL(this.config.url).hostname;
+    const siteTitle = this.analysisResult.metadata?.title || domain;
+    
+    const report = {
+      geoforge: {
+        version: "0.0.1",
+        generated: new Date().toISOString(),
+        url: this.config.url,
+        domain: domain
+      },
+      site: {
+        title: siteTitle,
+        description: this.analysisResult.metadata?.description || 'No description available',
+        language: this.analysisResult.metadata?.language || 'Not specified',
+        charset: this.analysisResult.metadata?.charset || 'Not specified',
+        author: this.analysisResult.metadata?.author || 'Not specified'
+      },
+      technical: {
+        responseTime: this.analysisResult.technical?.responseTime || 0,
+        statusCode: this.analysisResult.technical?.statusCode || 0,
+        contentType: this.analysisResult.technical?.contentType || '',
+        contentLength: this.analysisResult.technical?.contentLength || 0,
+        sslEnabled: this.analysisResult.technical?.sslEnabled || false,
+        hasRobots: this.analysisResult.technical?.hasRobots || false,
+        hasSitemap: this.analysisResult.technical?.hasSitemap || false
+      },
+      seo: {
+        metaTags: this.analysisResult.seo?.metaTags || {},
+        headings: (this.analysisResult.seo?.headings || []).slice(0, 20),
+        links: (this.analysisResult.seo?.links || []).slice(0, 50).map(link => ({
+          href: link.href,
+          text: link.text,
+          rel: link.rel
+        })),
+        images: (this.analysisResult.seo?.images || []).slice(0, 20).map(img => ({
+          src: img.src,
+          alt: img.alt,
+          title: img.title
+        }))
+      },
+      performance: {
+        loadTime: this.analysisResult.performance?.loadTime || 0,
+        domContentLoaded: this.analysisResult.performance?.domContentLoaded || 0,
+        firstContentfulPaint: this.analysisResult.performance?.firstContentfulPaint || 0,
+        largestContentfulPaint: this.analysisResult.performance?.largestContentfulPaint || 0,
+        cumulativeLayoutShift: this.analysisResult.performance?.cumulativeLayoutShift || 0,
+        firstInputDelay: this.analysisResult.performance?.firstInputDelay || 0
+      },
+      assets: {
+        stylesheets: (this.analysisResult.assets?.stylesheets || []).slice(0, 20),
+        scripts: (this.analysisResult.assets?.scripts || []).slice(0, 20),
+        images: (this.analysisResult.assets?.images || []).slice(0, 20),
+        fonts: (this.analysisResult.assets?.fonts || []).slice(0, 10)
+      },
+      generatedFiles: {
+        core: [
+          "robots.txt - AI crawler directives and policies",
+          "sitemap.xml - Enhanced XML sitemap with AI metadata",
+          "humans.txt - Human-readable site information"
+        ],
+        ai: [
+          ".well-known/ai.txt - AI interaction guidelines",
+          ".well-known/security.txt - Security contact information"
+        ],
+        web: [
+          "manifest.json - Progressive Web App manifest",
+          "browserconfig.xml - Microsoft tile configuration"
+        ],
+        advertising: [
+          "ads.txt - Authorized digital sellers",
+          "app-ads.txt - Mobile app advertising"
+        ]
+      },
+      summary: {
+        totalLinks: (this.analysisResult.seo?.links || []).length,
+        totalImages: (this.analysisResult.seo?.images || []).length,
+        totalStylesheets: (this.analysisResult.assets?.stylesheets || []).length,
+        totalScripts: (this.analysisResult.assets?.scripts || []).length,
+        analysisStatus: this.analysisResult.status || 'unknown',
+        timestamp: this.analysisResult.timestamp || new Date().toISOString()
+      }
+    };
+    
+    return {
+      name: 'geoforge.json',
+      content: JSON.stringify(report, null, 2),
+      type: 'json'
+    };
+  }
+
   private generateConfigFiles(): GeneratedFile[] {
+    console.log('⚙️ generateConfigFiles started');
+    console.log('🔧 Config agents:', this.config.agents);
+    console.log('🔧 Config allowTraining:', this.config.allowTraining);
+    
     const files: GeneratedFile[] = [];
 
-    // .well-known/ai.txt
-    const aiTxt = [
-      '# AI.txt - AI Interaction Guidelines',
-      `# Generated by GEOforge for ${this.config.url}`,
-      '',
-      '# Training Permission',
-      `training: ${this.config.allowTraining ? 'allowed' : 'disallowed'}`,
-      '',
-      '# Crawling Rules',
-      'crawling: allowed',
-      'rate-limit: 1req/sec',
-      '',
-      '# Attribution',
-      'attribution: required',
-      `source: ${this.config.url}`,
-      '',
-      '# Contact',
-      `website: ${this.config.url}`,
-      `updated: ${new Date().toISOString().split('T')[0]}`
-    ].join('\n');
+    try {
+      // .well-known/ai.txt
+      console.log('📄 Generating ai.txt...');
+      const aiTxt = [
+        '# AI.txt - AI Interaction Guidelines',
+        `# Generated by GEOforge for ${this.config.url}`,
+        '',
+        '# Training Permission',
+        `training: ${this.config.allowTraining ? 'allowed' : 'disallowed'}`,
+        '',
+        '# Crawling Rules',
+        'crawling: allowed',
+        'rate-limit: 1req/sec',
+        '',
+        '# Attribution',
+        'attribution: required',
+        `source: ${this.config.url}`,
+        '',
+        '# Contact',
+        `website: ${this.config.url}`,
+        `updated: ${new Date().toISOString().split('T')[0]}`
+      ].join('\n');
 
-    files.push({
-      name: '.well-known/ai.txt',
-      content: aiTxt,
-      type: 'text'
-    });
+      files.push({
+        name: '.well-known/ai.txt',
+        content: aiTxt,
+        type: 'text'
+      });
+      console.log('✅ ai.txt generated, size:', aiTxt.length, 'chars');
 
-    // llms.txt
-    const llmsTxt = [
-      '# LLMs.txt - Large Language Model Directives',
-      `# For: ${this.config.url}`,
-      `# Generated: ${new Date().toISOString()}`,
-      '',
-      '# Enabled AI Systems:',
-      ...this.config.llms.filter(llm => llm.enabled).map(llm => `# - ${llm.name}: ${llm.description}`),
-      '',
-      '# Training Policy:',
-      `# Content may ${this.config.allowTraining ? '' : 'NOT '}be used for AI training`,
-      '',
-      '# Usage Guidelines:',
-      '# - Respect robots.txt directives',
-      '# - Provide attribution when using content',
-      '# - Follow rate limiting guidelines',
-      '# - Check vendor-specific manifest files'
-    ].join('\n');
+      // llms.txt
+      console.log('📄 Generating llms.txt...');
+      const enabledAgents = this.config.agents ? 
+        Object.entries(this.config.agents).filter(([_, enabled]) => enabled).map(([agentId, _]) => agentId) : 
+        [];
+      
+      const llmsTxt = [
+        '# LLMs.txt - Large Language Model Directives',
+        `# For: ${this.config.url}`,
+        `# Generated: ${new Date().toISOString()}`,
+        '',
+        '# Enabled AI Systems:',
+        ...enabledAgents.map(agentId => `# - ${agentId}: AI agent configuration`),
+        '',
+        '# Training Policy:',
+        `# Content may ${this.config.allowTraining ? '' : 'NOT '}be used for AI training`,
+        '',
+        '# Usage Guidelines:',
+        '# - Respect robots.txt directives',
+        '# - Provide attribution when using content',
+        '# - Follow rate limiting guidelines',
+        '# - Check vendor-specific manifest files'
+      ].join('\n');
 
-    files.push({
-      name: 'llms.txt',
-      content: llmsTxt,
-      type: 'text'
-    });
+      files.push({
+        name: 'llms.txt',
+        content: llmsTxt,
+        type: 'text'
+      });
+      console.log('✅ llms.txt generated, size:', llmsTxt.length, 'chars');
 
+    } catch (error) {
+      console.error('❌ Error in generateConfigFiles:', error);
+    }
+
+    console.log(`📋 Total config files generated: ${files.length}`);
     return files;
   }
 
@@ -473,7 +724,7 @@ This package contains AI-ready optimization files generated by GEOforge for **${
 - \`llms.txt\` - Large Language Model directives
 
 ### AI Vendor Manifests
-${this.config.llms.filter(llm => llm.enabled).map(llm => `- \`${llm.id}.json\` - ${llm.name} specific configuration`).join('\n')}
+${this.config.agents ? Object.entries(this.config.agents).filter(([_, enabled]) => enabled).map(([agentId, _]) => `- \`${agentId}.json\` - ${agentId} specific configuration`).join('\n') : 'No AI agents configured'}
 
 ### Analysis & Reports
 - \`analysis-report.html\` - Comprehensive website analysis report
@@ -506,7 +757,7 @@ After deployment, verify the files are accessible:
 
 ## Enabled AI Systems
 
-${this.config.llms.filter(llm => llm.enabled).map(llm => `- **${llm.name}**: ${llm.description}`).join('\n')}
+${this.config.agents ? Object.entries(this.config.agents).filter(([_, enabled]) => enabled).map(([agentId, _]) => `- **${agentId}**: AI agent configuration`).join('\n') : 'No AI agents enabled'}
 
 ## Support
 
@@ -545,7 +796,7 @@ your-website-root/
 ├── llms.txt
 ├── .well-known/
 │   └── ai.txt
-${this.config.llms.filter(llm => llm.enabled).map(llm => `├── ${llm.id}.json`).join('\n')}
+${this.config.agents ? Object.entries(this.config.agents).filter(([_, enabled]) => enabled).map(([agentId, _]) => `├── ${agentId}.json`).join('\n') : ''}
 \`\`\`
 
 ## Server Configuration
@@ -583,7 +834,7 @@ After deployment, check these URLs return HTTP 200:
 - [ ] ${this.config.url}/humans.txt
 - [ ] ${this.config.url}/llms.txt
 - [ ] ${this.config.url}/.well-known/ai.txt
-${this.config.llms.filter(llm => llm.enabled).map(llm => `- [ ] ${this.config.url}/${llm.id}.json`).join('\n')}
+${this.config.agents ? Object.entries(this.config.agents).filter(([_, enabled]) => enabled).map(([agentId, _]) => `- [ ] ${this.config.url}/${agentId}.json`).join('\n') : ''}
 
 ## Testing AI Crawler Access
 
@@ -649,5 +900,24 @@ Generated by GEOforge on ${new Date().toLocaleString()}
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  private getAgentUserAgent(agentId: string): string {
+    // Map agent IDs to their user agent strings
+    const agentUserAgents: Record<string, string> = {
+      'gptbot': 'GPTBot',
+      'chatgpt-user': 'ChatGPT-User',
+      'oai-search': 'OAI-SearchBot',
+      'claudebot': 'ClaudeBot',
+      'claude-search': 'Claude-SearchBot',
+      'claude-user': 'Claude-User',
+      'perplexitybot': 'PerplexityBot',
+      'perplexity-user': 'Perplexity-User',
+      'bingbot': 'Bingbot',
+      'google-extended': 'Google-Extended',
+      'applebot-ext': 'Applebot-Extended'
+    };
+    
+    return agentUserAgents[agentId] || agentId;
   }
 }

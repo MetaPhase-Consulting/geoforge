@@ -1,0 +1,23 @@
+# Development files
+tsconfig.cli.json
+node_modules/
+*.log
+.DS_Store
+
+# Test files
+tests/
+test-output/
+coverage/
+
+# Build artifacts
+geoforge-output/
+*.zip
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
