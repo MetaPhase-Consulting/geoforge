@@ -10,12 +10,12 @@ const steps = [
   {
     icon: Hammer,
     title: 'Forge',
-    description: 'Generate robots.txt, sitemaps & manifests'
+    description: 'Automatically create all GEO files'
   },
   {
     icon: FolderOpen,
     title: 'Deploy',
-    description: 'Copy ZIP contents to your website root'
+    description: 'Download ZIP file and copy contents to website root'
   }
 ];
 
