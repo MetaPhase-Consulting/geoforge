@@ -1,8 +1,10 @@
+import { AGENTS, Agent } from '../config/agents';
+
 interface AnalysisConfig {
   url: string;
   siteName: string;
   allowTraining: boolean;
-  llms: LLMConfig[];
+  agents: Record<string, boolean>;
   includeHumans: boolean;
   includeSitemap: boolean;
   includeAssets: {
@@ -13,13 +15,6 @@ interface AnalysisConfig {
     fonts: boolean;
   };
   compression: 'none' | 'standard' | 'maximum';
-}
-
-interface LLMConfig {
-  id: string;
-  name: string;
-  description: string;
-  enabled: boolean;
 }
 
 interface AnalysisResult {
@@ -469,4 +464,4 @@ export class WebsiteAnalyzer {
   }
 }
 
-export type { AnalysisConfig, AnalysisResult, LLMConfig };
+export type { AnalysisConfig, AnalysisResult };

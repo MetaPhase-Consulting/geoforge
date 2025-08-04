@@ -1,23 +1,24 @@
 import React, { useState } from 'react';
 import { Globe, Download, CheckCircle, AlertCircle, Loader2, Settings, FileText, Zap, X } from 'lucide-react';
-import { WebsiteAnalyzer, type AnalysisConfig, type AnalysisResult, type LLMConfig } from '../services/websiteAnalyzer';
+import { WebsiteAnalyzer, type AnalysisConfig, type AnalysisResult } from '../services/websiteAnalyzer';
 import { ZipGenerator } from '../services/zipGenerator';
+import { AGENTS, getAgentsByType, getTypeBadge, type Agent, type AgentType } from '../config/agents';
 
-const defaultLLMs: LLMConfig[] = [
-  { id: 'gptbot', name: 'GPTBot', description: 'OpenAI\'s web crawler for ChatGPT training', enabled: true },
-  { id: 'claudebot', name: 'ClaudeBot', description: 'Anthropic\'s web crawler for Claude training', enabled: true },
-  { id: 'perplexitybot', name: 'PerplexityBot', description: 'Perplexity AI search crawler', enabled: true },
-  { id: 'google-extended', name: 'Google-Extended', description: 'Google\'s AI training crawler (Bard/Gemini)', enabled: false },
-  { id: 'applebot-extended', name: 'Applebot-Extended', description: 'Apple\'s AI crawler for training', enabled: false },
-  { id: 'bingbot', name: 'BingBot', description: 'Microsoft\'s search and AI crawler', enabled: true },
-];
+// Create default agent choices from AGENTS configuration
+const createDefaultAgentChoices = (): Record<string, boolean> => {
+  const choices: Record<string, boolean> = {};
+  AGENTS.forEach(agent => {
+    choices[agent.id] = agent.defaultEnabled;
+  });
+  return choices;
+};
 
 export default function Online() {
   const [config, setConfig] = useState<AnalysisConfig>({
     url: '',
     siteName: '',
     allowTraining: false,
-    llms: defaultLLMs,
+    agents: createDefaultAgentChoices(),
     includeHumans: true,
     includeSitemap: true,
     includeAssets: {
@@ -133,12 +134,10 @@ export default function Online() {
     }
   };
 
-  const updateLLM = (id: string, enabled: boolean) => {
+  const updateAgent = (id: string, enabled: boolean) => {
     setConfig(prev => ({
       ...prev,
-      llms: prev.llms.map(llm => 
-        llm.id === id ? { ...llm, enabled } : llm
-      )
+      agents: { ...prev.agents, [id]: enabled }
     }));
   };
 
@@ -147,6 +146,46 @@ export default function Online() {
     if (status === 'error') return 'text-red-600 dark:text-red-400';
     return 'text-charcoal dark:text-white';
   };
+
+  const renderAgentSection = (title: string, agents: Agent[], description?: string) => (
+    <div className="mb-8">
+      <h3 className="font-orbitron font-semibold text-charcoal dark:text-white mb-2">{title}</h3>
+      {description && (
+        <p className="text-sm text-charcoal/60 dark:text-silver/80 mb-4">{description}</p>
+      )}
+      <div className="grid md:grid-cols-2 gap-4">
+        {agents.map((agent) => {
+          const badge = getTypeBadge(agent.type);
+          return (
+            <div key={agent.id} className="flex items-start space-x-3 p-4 border border-silver/20 dark:border-silver/30 rounded-lg bg-white dark:bg-matte-bg">
+              <input
+                type="checkbox"
+                id={agent.id}
+                checked={config.agents[agent.id] ?? agent.defaultEnabled}
+                onChange={(e) => updateAgent(agent.id, e.target.checked)}
+                className="mt-1 w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2"
+                style={{ accentColor: '#FFD700' }}
+              />
+              <div className="flex-1">
+                <div className="flex items-center space-x-2 mb-1">
+                  <label htmlFor={agent.id} className="block font-work-sans font-medium text-charcoal dark:text-white cursor-pointer">
+                    {agent.label}
+                  </label>
+                  <span className={`px-2 py-1 text-xs font-mono font-bold rounded ${badge.color}`}>
+                    {badge.label}
+                  </span>
+                </div>
+                <p className="text-sm text-charcoal/70 dark:text-silver">{agent.description}</p>
+                <p className="text-xs text-charcoal/50 dark:text-silver/60 mt-1 font-mono">
+                  {agent.robots.join(', ')}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-white dark:bg-matte-bg py-12">
@@ -363,30 +402,24 @@ export default function Online() {
             </h2>
 
             <div className="space-y-6">
-              {/* LLM Configuration */}
-              <div>
-                <h3 className="font-orbitron font-semibold text-charcoal dark:text-white mb-4">AI Crawlers</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {config.llms.map((llm) => (
-                    <div key={llm.id} className="flex items-start space-x-3 p-4 border border-silver/20 dark:border-silver/30 rounded-lg bg-white dark:bg-matte-bg">
-                      <input
-                        type="checkbox"
-                        id={llm.id}
-                        checked={llm.enabled}
-                        onChange={(e) => updateLLM(llm.id, e.target.checked)}
-                        className="mt-1 w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2"
-                        style={{ accentColor: '#FFD700' }}
-                      />
-                      <div className="flex-1">
-                        <label htmlFor={llm.id} className="block font-work-sans font-medium text-charcoal dark:text-white cursor-pointer">
-                          {llm.name}
-                        </label>
-                        <p className="text-sm text-charcoal/70 dark:text-silver mt-1">{llm.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {/* Agent Configuration */}
+              {renderAgentSection(
+                "AI Crawlers", 
+                [...getAgentsByType("training-crawler"), ...getAgentsByType("live-search-indexer")],
+                "Automated crawlers that index and train on your content"
+              )}
+              
+              {renderAgentSection(
+                "On-Demand Fetchers", 
+                getAgentsByType("on-demand-fetch"),
+                "User-triggered fetchers that may bypass robots.txt"
+              )}
+              
+              {renderAgentSection(
+                "Policy Tokens", 
+                getAgentsByType("policy-token"),
+                "Special robots.txt tokens that control AI training usage"
+              )}
 
               {/* Basic Options */}
               <div className="border-t border-silver/20 dark:border-silver/30 pt-6">
