@@ -189,53 +189,99 @@ export class WebsiteAnalyzer {
 
   private async fetchPage(url: string): Promise<string> {
     const startTime = Date.now();
+    const FETCH_TIMEOUT = 10000; // 10 seconds timeout
     
     try {
-      // Try direct fetch first (will work for CORS-enabled sites)
-      const response = await fetch(url, {
-        signal: this.abortController.signal,
-        headers: {
-          'User-Agent': 'GEOforge-Analyzer/1.0',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-        }
-      });
+      // Create timeout controller
+      const timeoutController = new AbortController();
+      const timeoutId = setTimeout(() => timeoutController.abort(), FETCH_TIMEOUT);
+      
+      // Combine user abort and timeout signals
+      const combinedSignal = AbortSignal.any ? 
+        AbortSignal.any([this.abortController.signal, timeoutController.signal]) :
+        timeoutController.signal;
 
-      this.results.technical.responseTime = Date.now() - startTime;
-      this.results.technical.statusCode = response.status;
-      this.results.technical.contentType = response.headers.get('content-type') || '';
-      this.results.technical.contentLength = parseInt(response.headers.get('content-length') || '0');
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const content = await response.text();
-      return content;
-    } catch (error) {
-      // If direct fetch fails due to CORS, try alternative methods
       try {
-        // Try using a CORS proxy service
-        const proxyResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, {
-          signal: this.abortController.signal
+        // Try direct fetch first (will work for CORS-enabled sites)
+        const response = await fetch(url, {
+          signal: combinedSignal,
+          headers: {
+            'User-Agent': 'GEOforge-Analyzer/1.0',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+          }
         });
-        
-        if (proxyResponse.ok) {
-          const proxyData = await proxyResponse.json();
-          this.results.technical.responseTime = Date.now() - startTime;
-          this.results.technical.statusCode = 200;
-          this.results.technical.contentType = 'text/html';
-          this.results.technical.contentLength = proxyData.contents.length;
-          return proxyData.contents;
+
+        clearTimeout(timeoutId);
+        this.results.technical.responseTime = Date.now() - startTime;
+        this.results.technical.statusCode = response.status;
+        this.results.technical.contentType = response.headers.get('content-type') || '';
+        this.results.technical.contentLength = parseInt(response.headers.get('content-length') || '0');
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-      } catch (proxyError) {
-        console.warn('Proxy fetch also failed:', proxyError);
+
+        const content = await response.text();
+        return content;
+        
+      } catch (directFetchError) {
+        clearTimeout(timeoutId);
+        
+        // Check if it was a timeout
+        if (directFetchError instanceof Error && directFetchError.name === 'AbortError') {
+          if (timeoutController.signal.aborted) {
+            throw new Error(`Request timed out after ${FETCH_TIMEOUT / 1000} seconds. The website may be slow to respond or unreachable.`);
+          } else {
+            throw new Error('Analysis was cancelled by user');
+          }
+        }
+        
+        // Try CORS proxy as fallback
+        console.warn('Direct fetch failed, trying CORS proxy:', directFetchError);
+        
+        const proxyTimeoutController = new AbortController();
+        const proxyTimeoutId = setTimeout(() => proxyTimeoutController.abort(), FETCH_TIMEOUT);
+        
+        const proxySignal = AbortSignal.any ? 
+          AbortSignal.any([this.abortController.signal, proxyTimeoutController.signal]) :
+          proxyTimeoutController.signal;
+
+        try {
+          const proxyResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, {
+            signal: proxySignal
+          });
+          
+          clearTimeout(proxyTimeoutId);
+          
+          if (proxyResponse.ok) {
+            const proxyData = await proxyResponse.json();
+            this.results.technical.responseTime = Date.now() - startTime;
+            this.results.technical.statusCode = 200;
+            this.results.technical.contentType = 'text/html';
+            this.results.technical.contentLength = proxyData.contents.length;
+            return proxyData.contents;
+          } else {
+            throw new Error(`Proxy service returned HTTP ${proxyResponse.status}`);
+          }
+        } catch (proxyError) {
+          clearTimeout(proxyTimeoutId);
+          
+          if (proxyError instanceof Error && proxyError.name === 'AbortError') {
+            if (proxyTimeoutController.signal.aborted) {
+              throw new Error(`Request timed out after ${FETCH_TIMEOUT / 1000} seconds using proxy service. The website appears to be unreachable.`);
+            } else {
+              throw new Error('Analysis was cancelled by user');
+            }
+          }
+          
+          // Both direct and proxy failed
+          throw new Error(`Unable to fetch website content. This could be due to:\n• CORS restrictions blocking direct access\n• Website is down or unreachable\n• Network connectivity issues\n• Website blocking automated requests\n\nOriginal error: ${directFetchError instanceof Error ? directFetchError.message : 'Network error'}`);
+        }
       }
-      
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Analysis was cancelled');
-      }
-      
-      throw new Error(`Failed to fetch website: ${error instanceof Error ? error.message : 'Network error'}`);
+
+    } catch (error) {
+      // Re-throw the error as-is since we've already handled it above
+      throw error;
     }
   }
 
@@ -318,13 +364,24 @@ export class WebsiteAnalyzer {
 
   private async checkExistingFiles(): Promise<void> {
     const url = new URL(this.config.url);
+    const FILE_TIMEOUT = 5000; // 5 seconds for individual file checks
 
     // Check for robots.txt
     try {
+      const robotsTimeoutController = new AbortController();
+      const robotsTimeoutId = setTimeout(() => robotsTimeoutController.abort(), FILE_TIMEOUT);
+      
+      const robotsSignal = AbortSignal.any ? 
+        AbortSignal.any([this.abortController.signal, robotsTimeoutController.signal]) :
+        robotsTimeoutController.signal;
+
       const robotsUrl = `${url.origin}/robots.txt`;
       const robotsResponse = await fetch(robotsUrl, {
-        signal: this.abortController.signal
+        signal: robotsSignal
       });
+      
+      clearTimeout(robotsTimeoutId);
+      
       if (robotsResponse.ok) {
         const content = await robotsResponse.text();
         this.results.technical.hasRobots = true;
@@ -337,17 +394,30 @@ export class WebsiteAnalyzer {
         this.results.technical.hasRobots = false;
         this.results.existingFiles.robotsTxt = { exists: false };
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn('Robots.txt check timed out or was cancelled');
+      }
       this.results.technical.hasRobots = false;
       this.results.existingFiles.robotsTxt = { exists: false };
     }
 
     // Check for sitemap
     try {
+      const sitemapTimeoutController = new AbortController();
+      const sitemapTimeoutId = setTimeout(() => sitemapTimeoutController.abort(), FILE_TIMEOUT);
+      
+      const sitemapSignal = AbortSignal.any ? 
+        AbortSignal.any([this.abortController.signal, sitemapTimeoutController.signal]) :
+        sitemapTimeoutController.signal;
+
       const sitemapUrl = `${url.origin}/sitemap.xml`;
       const sitemapResponse = await fetch(sitemapUrl, {
-        signal: this.abortController.signal
+        signal: sitemapSignal
       });
+      
+      clearTimeout(sitemapTimeoutId);
+      
       if (sitemapResponse.ok) {
         const content = await sitemapResponse.text();
         this.results.technical.hasSitemap = true;
@@ -360,7 +430,10 @@ export class WebsiteAnalyzer {
         this.results.technical.hasSitemap = false;
         this.results.existingFiles.sitemap = { exists: false };
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn('Sitemap.xml check timed out or was cancelled');
+      }
       this.results.technical.hasSitemap = false;
       this.results.existingFiles.sitemap = { exists: false };
     }
