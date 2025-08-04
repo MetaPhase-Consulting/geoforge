@@ -185,10 +185,12 @@ export class ZipGenerator {
   private generateLLMManifests(): GeneratedFile[] {
     const manifests: GeneratedFile[] = [];
 
-    this.config.llms.forEach(llm => {
-      if (llm.enabled) {
+    // Only generate manifests for enabled policy tokens and training crawlers
+    AGENTS.forEach(agent => {
+      const isEnabled = this.config.agents[agent.id] ?? agent.defaultEnabled;
+      if (isEnabled && (agent.type === 'policy-token' || agent.type === 'training-crawler')) {
         const manifest = {
-          name: `${llm.id}.json`,
+          name: `${agent.id}.json`,
           content: JSON.stringify({
             version: '1.0',
             generator: 'GEOforge',
@@ -211,7 +213,7 @@ export class ZipGenerator {
             technical: {
               preferred_format: 'json',
               rate_limit: '1req/sec',
-              user_agent: this.getLLMUserAgent(llm.id)
+              user_agent: agent.robots[0] // Use first robot string
             },
             content: {
               languages: [this.analysisResult.metadata.language || 'en'],
