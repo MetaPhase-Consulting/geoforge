@@ -1,4 +1,5 @@
 import { AGENTS, Agent } from '../config/agents';
+import { JSDOM } from 'jsdom';
 
 interface AnalysisConfig {
   url: string;
@@ -140,7 +141,7 @@ export class WebsiteAnalyzer {
 
   async analyze(onProgress?: (progress: number, status: string) => void): Promise<AnalysisResult> {
     console.log('🔍 WebsiteAnalyzer.analyze started');
-    console.log('📋 Config:', this.config);
+    // Config logging removed for cleaner CLI output
     
     try {
       console.log('✅ Step 1: Validating URL...');
@@ -186,7 +187,17 @@ export class WebsiteAnalyzer {
       console.log('🎉 Step 9: Analysis complete!');
       onProgress?.(100, 'Analysis complete!');
       this.results.status = 'success';
-      console.log('✅ Final results:', this.results);
+      // Log a clean summary instead of the full results object
+      console.log('✅ Analysis Summary:');
+      console.log(`   📋 Title: ${this.results.metadata.title}`);
+      console.log(`   🔗 URL: ${this.results.url}`);
+      console.log(`   ⚡ Response: ${this.results.technical.statusCode} (${this.results.technical.responseTime}ms)`);
+      console.log(`   📊 Content: ${this.results.technical.contentLength} bytes`);
+      console.log(`   🔧 Robots.txt: ${this.results.technical.hasRobots ? 'Found' : 'Not found'}`);
+      console.log(`   🗺️ Sitemap.xml: ${this.results.technical.hasSitemap ? 'Found' : 'Not found'}`);
+      console.log(`   🔍 Links: ${this.results.seo.links.length} found`);
+      console.log(`   🖼️ Images: ${this.results.seo.images.length} found`);
+      console.log(`   📄 Meta tags: ${Object.keys(this.results.seo.metaTags).length} found`);
       
     } catch (error) {
       console.error('💥 Error in WebsiteAnalyzer.analyze:', error);
@@ -363,8 +374,8 @@ export class WebsiteAnalyzer {
 
   private async analyzeHtmlContent(content: string): Promise<void> {
     try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(content, 'text/html');
+      const dom = new JSDOM(content);
+      const doc = dom.window.document;
 
       // Extract metadata with better error handling
       this.results.metadata.title = doc.title?.trim() || '';
@@ -388,9 +399,13 @@ export class WebsiteAnalyzer {
       this.results.metadata.charset = charsetMeta?.getAttribute('charset') || 
                                      charsetMeta?.getAttribute('content')?.match(/charset=([^;]+)/)?.[1] || '';
       
-      console.log('Extracted metadata:', this.results.metadata);
+      // Metadata extraction complete
     } catch (error) {
-      console.error('Error parsing HTML content:', error);
+      // Only log non-CSS parsing errors
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (!errorMessage.includes('Could not parse CSS stylesheet')) {
+        console.error('Error parsing HTML content:', error);
+      }
       // Set fallback values
       this.results.metadata.title = 'Unable to parse title';
       this.results.metadata.description = 'Unable to parse description';
@@ -455,7 +470,7 @@ export class WebsiteAnalyzer {
     // Helper function to try direct fetch first, then CORS proxies
     const fetchWithCorsFallback = async (targetUrl: string, timeout: number, expectedType: 'robots' | 'sitemap'): Promise<{ success: boolean; content?: string; error?: string }> => {
       // Try direct fetch first
-      let timeoutId: number | null = null;
+      let timeoutId: NodeJS.Timeout | null = null;
       try {
         const timeoutController = new AbortController();
         timeoutId = setTimeout(() => timeoutController.abort(), timeout);
@@ -520,16 +535,29 @@ export class WebsiteAnalyzer {
           }
           
           if (response.ok) {
-            let content: string;
-            
             // Handle different proxy response formats
-            if (proxy.includes('allorigins.win')) {
-              const data = await response.json();
-              content = data.contents;
-            } else if (proxy.includes('codetabs.com')) {
-              const data = await response.json();
-              content = data.data;
+            let content: string;
+            const contentType = response.headers.get('content-type') || '';
+            
+            // Check if response is JSON
+            if (contentType.includes('application/json')) {
+              try {
+                if (proxy.includes('allorigins.win')) {
+                  const data = await response.json();
+                  content = data.contents;
+                } else if (proxy.includes('codetabs.com')) {
+                  const data = await response.json();
+                  content = data.data;
+                } else {
+                  const data = await response.json();
+                  content = data.body || data.content || data.data || JSON.stringify(data);
+                }
+              } catch (parseError) {
+                console.warn(`Proxy ${proxy} returned invalid JSON for ${targetUrl}`);
+                continue; // Try next proxy
+              }
             } else {
+              // Handle as text
               content = await response.text();
             }
             
@@ -546,7 +574,11 @@ export class WebsiteAnalyzer {
             clearTimeout(timeoutId);
             timeoutId = null;
           }
-          console.warn(`Proxy ${proxy} failed for ${targetUrl}:`, proxyError);
+          // Only log non-JSON parsing errors to avoid spam
+          const errorMessage = proxyError instanceof Error ? proxyError.message : String(proxyError);
+          if (!errorMessage.includes('Unexpected token') && !errorMessage.includes('JSON')) {
+            console.warn(`Proxy ${proxy} failed for ${targetUrl}:`, proxyError);
+          }
           continue; // Try next proxy
         }
       }
@@ -588,8 +620,8 @@ export class WebsiteAnalyzer {
   }
 
   private async analyzeSeoElements(content: string): Promise<void> {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
+    const dom = new JSDOM(content);
+    const doc = dom.window.document;
 
     // Meta tags
     doc.querySelectorAll('meta').forEach(meta => {
@@ -640,8 +672,8 @@ export class WebsiteAnalyzer {
   }
 
   private async discoverAssets(content: string): Promise<void> {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
+    const dom = new JSDOM(content);
+    const doc = dom.window.document;
     const baseUrl = new URL(this.config.url);
 
     // Stylesheets

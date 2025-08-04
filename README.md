@@ -79,19 +79,142 @@ Visit [geoforge.dev](https://geoforge.dev) to use the web interface.
    Navigate to `http://localhost:5173` (or the port shown in your terminal)
 
 ### Command Line Usage
+
+The GEOforge CLI provides powerful command-line tools for website analysis and AI optimization file generation.
+
+#### Installation
 ```bash
-# Install globally
-npm install -g geoforge
+# Clone the repository
+git clone https://github.com/brianfunk/geoforge.git
+cd geoforge
 
-# Initialize project
-npx geoforge init --site "My Site" --domain https://mysite.com
+# Install dependencies
+npm install
 
-# Run audit
-npx geoforge audit
-
-# Generate files
-npx geoforge generate --output ./ai-files
+# Build the CLI
+npm run build:cli
 ```
+
+#### Basic Usage
+```bash
+# Analyze a website and generate AI optimization files
+node dist/cli/index.js https://example.com
+
+# Generate files with custom options
+node dist/cli/index.js https://example.com --allow-training --no-humans --compression maximum
+
+# Specify output directory
+node dist/cli/index.js https://example.com --output ./my-ai-files
+```
+
+#### Command Line Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--allow-training` | Allow AI training on content | `false` |
+| `--no-humans` | Skip humans.txt generation | `true` |
+| `--no-sitemap` | Skip sitemap.xml generation | `true` |
+| `--no-ai-txt` | Skip ai.txt generation | `true` |
+| `--no-security-txt` | Skip security.txt generation | `true` |
+| `--no-manifest` | Skip manifest.json generation | `true` |
+| `--no-ads` | Skip ads.txt and app-ads.txt generation | `true` |
+
+| `--compression <level>` | ZIP compression level (none, standard, maximum) | `standard` |
+| `--output <dir>` | Output directory | `geoforge-output` |
+
+#### Examples
+
+**Basic analysis with all files:**
+```bash
+node dist/cli/index.js https://metaphase.tech
+```
+
+**Selective file generation:**
+```bash
+node dist/cli/index.js https://farmers.gov --no-humans --no-ai-txt --compression maximum
+```
+
+**Allow AI training:**
+```bash
+node dist/cli/index.js https://example.com --allow-training
+```
+
+**Custom output directory:**
+```bash
+node dist/cli/index.js https://example.com --output ./custom-output
+```
+
+#### Generated Files
+
+The CLI generates a comprehensive set of AI optimization files:
+
+**Core Files:**
+- `robots.txt` - AI crawler directives and policies
+- `sitemap.xml` - Enhanced XML sitemap with AI metadata
+- `humans.txt` - Human-readable site information
+
+**AI-Specific Files:**
+- `.well-known/ai.txt` - AI interaction guidelines
+- `.well-known/security.txt` - Security contact information
+
+**Web App Files:**
+- `manifest.json` - Progressive Web App manifest
+- `browserconfig.xml` - Microsoft tile configuration
+
+**Advertising Files:**
+- `ads.txt` - Authorized digital sellers
+- `app-ads.txt` - Mobile app advertising
+
+**Analysis Report:**
+- `geoforge.json` - Detailed website analysis report in JSON format
+
+#### Deployment Instructions
+
+1. **Extract the ZIP file** to your website's root directory
+2. **Upload all files** to your web server
+3. **Verify accessibility** of key files:
+   - `https://yourdomain.com/robots.txt`
+   - `https://yourdomain.com/sitemap.xml`
+   - `https://yourdomain.com/.well-known/ai.txt`
+   - `https://yourdomain.com/.well-known/security.txt`
+
+#### Server Configuration
+
+**Apache (.htaccess):**
+```apache
+# Enable .well-known directory
+RewriteEngine On
+RewriteRule ^\.well-known/(.*)$ .well-known/$1 [L]
+```
+
+**Nginx:**
+```nginx
+# .well-known location
+location /.well-known/ {
+    try_files $uri =404;
+}
+```
+
+#### Testing Your Deployment
+
+Use these tools to verify your deployment:
+- **Google Search Console** - Submit sitemap and monitor indexing
+- **Bing Webmaster Tools** - Verify robots.txt and sitemap
+- **Online robots.txt validators** - Test crawler directives
+- **Screaming Frog SEO Spider** - Comprehensive site audit
+
+#### Troubleshooting
+
+**Common Issues:**
+- **Files not accessible**: Check file permissions (644 for files, 755 for directories)
+- **404 errors for .well-known**: Ensure server configuration allows access
+- **ZIP extraction issues**: Use a modern unzip tool
+- **Analysis failures**: Check that the target website is accessible
+
+**Getting Help:**
+- Check the `geoforge.json` file in your generated ZIP for detailed analysis
+- Review the console output for specific error messages
+- Ensure your target website is publicly accessible
 
 ## 🏗️ Project Structure
 
@@ -151,23 +274,28 @@ geoforge/
 ### Core Files
 - **`robots.txt`** - AI crawler directives and policies
 - **`sitemap.xml`** - Enhanced XML sitemap with AI metadata
-- **`sitemap.json`** - JSON sitemap for modern crawlers
 - **`humans.txt`** - Human-readable site information
-- **`llms.txt`** - Large Language Model directives
 
 ### AI-Specific Files
 - **`.well-known/ai.txt`** - AI interaction guidelines
-- **`ai-manifest.json`** - Standardized AI platform manifest
-- **`vendor-specific/`** - Platform-specific configurations
-  - `openai-manifest.json`
-  - `anthropic-manifest.json`
-  - `perplexity-manifest.json`
+- **`.well-known/security.txt`** - Security contact information
+
+### Web App Files
+- **`manifest.json`** - Progressive Web App manifest
+- **`browserconfig.xml`** - Microsoft tile configuration
+
+### Advertising Files
+- **`ads.txt`** - Authorized digital sellers
+- **`app-ads.txt`** - Mobile app advertising
+
+### Analysis Report
+- **`ANALYSIS.md`** - Detailed website analysis report
 
 ### Advanced Features
 - **ZIP Downloads** - Complete AI optimization packages
-- **Bulk Generation** - Process multiple sites simultaneously
-- **Version Control** - Track changes to AI configurations
-- **Analytics Integration** - Monitor AI crawler activity
+- **Real-time Analysis** - Website crawling and metadata extraction
+- **Selective Generation** - Choose which files to include
+- **Compression Options** - Multiple ZIP compression levels
 
 ## 🛠️ Development
 
