@@ -44,7 +44,7 @@ export default function Hero() {
               </Link>
               
               <a
-                href="https://github.com/geoforge/geoforge"
+                href="https://github.com/brianfunk/geoforge"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group bg-transparent border-2 border-silver text-charcoal/70 dark:text-silver px-4 py-4 rounded-lg font-orbitron font-semibold text-lg transition-all duration-300 hover:border-gold hover:text-gold dark:hover:border-gold dark:hover:text-gold transform hover:scale-105 inline-flex items-center justify-center w-60"
