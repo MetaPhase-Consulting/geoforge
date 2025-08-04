@@ -203,10 +203,12 @@ export class WebsiteAnalyzer {
     const startTime = Date.now();
     
     try {
-      const response = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`, {
+      // Try direct fetch first (will work for CORS-enabled sites)
+      const response = await fetch(url, {
         signal: this.abortController.signal,
         headers: {
-          'User-Agent': 'GEOforge-Analyzer/1.0'
+          'User-Agent': 'GEOforge-Analyzer/1.0',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
         }
       });
 
@@ -222,13 +224,30 @@ export class WebsiteAnalyzer {
       const content = await response.text();
       return content;
     } catch (error) {
+      // If direct fetch fails due to CORS, try alternative methods
+      try {
+        // Try using a CORS proxy service
+        const proxyResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, {
+          signal: this.abortController.signal
+        });
+        
+        if (proxyResponse.ok) {
+          const proxyData = await proxyResponse.json();
+          this.results.technical.responseTime = Date.now() - startTime;
+          this.results.technical.statusCode = 200;
+          this.results.technical.contentType = 'text/html';
+          this.results.technical.contentLength = proxyData.contents.length;
+          return proxyData.contents;
+        }
+      } catch (proxyError) {
+        console.warn('Proxy fetch also failed:', proxyError);
+      }
+      
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Analysis was cancelled');
       }
       
-      // Fallback: simulate analysis for demo purposes
-      console.warn('Fetch failed, using simulated data:', error);
-      return this.generateSimulatedContent(url);
+      throw new Error(`Failed to fetch website: ${error instanceof Error ? error.message : 'Network error'}`);
     }
   }
 
@@ -269,16 +288,39 @@ export class WebsiteAnalyzer {
   }
 
   private async analyzeHtmlContent(content: string): Promise<void> {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(content, 'text/html');
 
-    // Extract metadata
-    this.results.metadata.title = doc.title || '';
-    this.results.metadata.description = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-    this.results.metadata.keywords = (doc.querySelector('meta[name="keywords"]')?.getAttribute('content') || '').split(',').map(k => k.trim()).filter(Boolean);
-    this.results.metadata.author = doc.querySelector('meta[name="author"]')?.getAttribute('content') || '';
-    this.results.metadata.language = doc.documentElement.lang || '';
-    this.results.metadata.charset = doc.querySelector('meta[charset]')?.getAttribute('charset') || '';
+      // Extract metadata with better error handling
+      this.results.metadata.title = doc.title?.trim() || '';
+      
+      const descriptionMeta = doc.querySelector('meta[name="description"]') || 
+                             doc.querySelector('meta[property="og:description"]');
+      this.results.metadata.description = descriptionMeta?.getAttribute('content')?.trim() || '';
+      
+      const keywordsMeta = doc.querySelector('meta[name="keywords"]');
+      const keywordsContent = keywordsMeta?.getAttribute('content') || '';
+      this.results.metadata.keywords = keywordsContent
+        .split(',')
+        .map(k => k.trim())
+        .filter(Boolean);
+      
+      this.results.metadata.author = doc.querySelector('meta[name="author"]')?.getAttribute('content')?.trim() || '';
+      this.results.metadata.language = doc.documentElement.lang || doc.querySelector('html')?.getAttribute('lang') || '';
+      
+      const charsetMeta = doc.querySelector('meta[charset]') || 
+                         doc.querySelector('meta[http-equiv="Content-Type"]');
+      this.results.metadata.charset = charsetMeta?.getAttribute('charset') || 
+                                     charsetMeta?.getAttribute('content')?.match(/charset=([^;]+)/)?.[1] || '';
+      
+      console.log('Extracted metadata:', this.results.metadata);
+    } catch (error) {
+      console.error('Error parsing HTML content:', error);
+      // Set fallback values
+      this.results.metadata.title = 'Unable to parse title';
+      this.results.metadata.description = 'Unable to parse description';
+    }
   }
 
   private async analyzeTechnicalAspects(): Promise<void> {
@@ -292,7 +334,9 @@ export class WebsiteAnalyzer {
     // Check for robots.txt
     try {
       const robotsUrl = `${url.origin}/robots.txt`;
-      const robotsResponse = await fetch(`/api/proxy?url=${encodeURIComponent(robotsUrl)}`);
+      const robotsResponse = await fetch(robotsUrl, {
+        signal: this.abortController.signal
+      });
       if (robotsResponse.ok) {
         const content = await robotsResponse.text();
         this.results.technical.hasRobots = true;
@@ -303,15 +347,19 @@ export class WebsiteAnalyzer {
         };
       } else {
         this.results.technical.hasRobots = false;
+        this.results.existingFiles.robotsTxt = { exists: false };
       }
     } catch {
       this.results.technical.hasRobots = false;
+      this.results.existingFiles.robotsTxt = { exists: false };
     }
 
     // Check for sitemap
     try {
       const sitemapUrl = `${url.origin}/sitemap.xml`;
-      const sitemapResponse = await fetch(`/api/proxy?url=${encodeURIComponent(sitemapUrl)}`);
+      const sitemapResponse = await fetch(sitemapUrl, {
+        signal: this.abortController.signal
+      });
       if (sitemapResponse.ok) {
         const content = await sitemapResponse.text();
         this.results.technical.hasSitemap = true;
@@ -322,9 +370,11 @@ export class WebsiteAnalyzer {
         };
       } else {
         this.results.technical.hasSitemap = false;
+        this.results.existingFiles.sitemap = { exists: false };
       }
     } catch {
       this.results.technical.hasSitemap = false;
+      this.results.existingFiles.sitemap = { exists: false };
     }
   }
 

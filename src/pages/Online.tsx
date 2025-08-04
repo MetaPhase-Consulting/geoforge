@@ -90,8 +90,9 @@ export default function Online() {
       setAnalysisResult(result);
       
       // Auto-populate site name if not provided
-      if (!config.siteName && result.metadata.title) {
-        setConfig(prev => ({ ...prev, siteName: result.metadata.title }));
+      if (!config.siteName.trim() && result.metadata.title) {
+        const cleanTitle = result.metadata.title.replace(/\s*\|\s*.*$/, '').trim(); // Remove " | Site Name" suffixes
+        setConfig(prev => ({ ...prev, siteName: cleanTitle }));
       }
       
     } catch (err) {
