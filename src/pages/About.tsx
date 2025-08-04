@@ -1,5 +1,5 @@
 import React from 'react';
-import { Hammer, Target, Users, Zap, Shield, AlertTriangle, User } from 'lucide-react';
+import { Hammer, Target, Users, Zap, Shield, AlertTriangle, User, BookOpen } from 'lucide-react';
 
 export default function About() {
   const features = [
@@ -24,10 +24,8 @@ export default function About() {
     <div className="min-h-screen bg-white dark:bg-matte-bg py-12">
       <div className="container mx-auto px-6 max-w-4xl">
         <div className="text-center mb-12">
-          <div className="w-20 h-20 mx-auto bg-gold/10 dark:bg-gold/20 rounded-2xl flex items-center justify-center mb-6">
-            <Hammer className="w-10 h-10 text-gold" />
-          </div>
-          <h1 className="font-orbitron text-5xl font-bold text-charcoal dark:text-white mb-4">
+          <h1 className="font-orbitron text-5xl font-bold text-charcoal dark:text-white mb-4 flex items-center justify-center space-x-4">
+            <BookOpen className="w-12 h-12 text-gold" />
             <span className="shimmer-text">About GEOforge</span>
           </h1>
           <p className="text-xl text-charcoal/70 dark:text-silver font-work-sans max-w-2xl mx-auto">

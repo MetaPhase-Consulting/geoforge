@@ -112,7 +112,8 @@ export default function Generate() {
     <div className="min-h-screen bg-white dark:bg-matte-bg py-12">
       <div className="container mx-auto px-6 max-w-4xl">
         <div className="text-center mb-12">
-          <h1 className="font-orbitron text-5xl font-bold text-charcoal dark:text-white mb-4">
+          <h1 className="font-orbitron text-5xl font-bold text-charcoal dark:text-white mb-4 flex items-center justify-center space-x-4">
+            <Download className="w-12 h-12 text-gold" />
             <span className="shimmer-text">Online Tool</span>
           </h1>
           <p className="text-xl text-charcoal/70 dark:text-silver font-work-sans">
