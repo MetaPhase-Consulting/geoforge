@@ -5,7 +5,6 @@ interface AnalysisConfig {
   llms: LLMConfig[];
   includeHumans: boolean;
   includeSitemap: boolean;
-  auditMode: 'basic' | 'full';
   includeAssets: {
     html: boolean;
     css: boolean;
@@ -13,7 +12,6 @@ interface AnalysisConfig {
     images: boolean;
     fonts: boolean;
   };
-  maxDepth: number;
   compression: 'none' | 'standard' | 'maximum';
 }
 
@@ -170,11 +168,6 @@ export class WebsiteAnalyzer {
 
       onProgress?.(70, 'Discovering assets...');
       await this.discoverAssets(mainPageContent);
-
-      if (this.config.auditMode === 'full' && this.config.maxDepth > 1) {
-        onProgress?.(80, 'Crawling additional pages...');
-        await this.crawlAdditionalPages();
-      }
 
       onProgress?.(100, 'Analysis complete!');
       this.results.status = 'success';
@@ -470,29 +463,6 @@ export class WebsiteAnalyzer {
     });
   }
 
-  private async crawlAdditionalPages(): Promise<void> {
-    const baseUrl = new URL(this.config.url);
-    const pagesToCrawl = this.results.seo.links
-      .filter(link => {
-        try {
-          const linkUrl = new URL(link.href, baseUrl);
-          return linkUrl.hostname === baseUrl.hostname;
-        } catch {
-          return false;
-        }
-      })
-      .slice(0, Math.min(10, this.config.maxDepth * 3))
-      .map(link => new URL(link.href, baseUrl).href);
-
-    for (const pageUrl of pagesToCrawl) {
-      try {
-        await this.fetchPage(pageUrl);
-        this.results.crawledPages.push(pageUrl);
-      } catch (error) {
-        this.results.errors.push(`Failed to crawl ${pageUrl}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-    }
-  }
 
   abort(): void {
     this.abortController.abort();

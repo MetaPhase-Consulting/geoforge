@@ -20,7 +20,6 @@ export default function Online() {
     llms: defaultLLMs,
     includeHumans: true,
     includeSitemap: true,
-    auditMode: 'basic',
     includeAssets: {
       html: true,
       css: true,
@@ -28,7 +27,6 @@ export default function Online() {
       images: false,
       fonts: false
     },
-    maxDepth: 2,
     compression: 'standard'
   });
 
@@ -430,36 +428,6 @@ export default function Online() {
                   </div>
 
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-work-sans font-medium text-charcoal dark:text-white mb-2">
-                        Audit Mode
-                      </label>
-                      <select
-                        value={config.auditMode}
-                        onChange={(e) => setConfig(prev => ({ ...prev, auditMode: e.target.value as 'basic' | 'full' }))}
-                        className="w-full px-4 py-2 border border-silver/30 dark:border-silver/40 rounded-lg bg-white dark:bg-matte-bg text-charcoal dark:text-white font-work-sans focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none"
-                      >
-                        <option value="basic">Basic (Single Page)</option>
-                        <option value="full">Full (Multi-Page Crawl)</option>
-                      </select>
-                    </div>
-
-                    {config.auditMode === 'full' && (
-                      <div>
-                        <label className="block text-sm font-work-sans font-medium text-charcoal dark:text-white mb-2">
-                          Max Crawl Depth
-                        </label>
-                        <select
-                          value={config.maxDepth}
-                          onChange={(e) => setConfig(prev => ({ ...prev, maxDepth: parseInt(e.target.value) }))}
-                          className="w-full px-4 py-2 border border-silver/30 dark:border-silver/40 rounded-lg bg-white dark:bg-matte-bg text-charcoal dark:text-white font-work-sans focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none"
-                        >
-                          <option value={1}>1 Level</option>
-                          <option value={2}>2 Levels</option>
-                          <option value={3}>3 Levels</option>
-                        </select>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
