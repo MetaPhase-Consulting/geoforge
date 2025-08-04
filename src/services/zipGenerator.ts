@@ -185,12 +185,10 @@ export class ZipGenerator {
   private generateLLMManifests(): GeneratedFile[] {
     const manifests: GeneratedFile[] = [];
 
-    // Only generate manifests for enabled policy tokens and training crawlers
-    AGENTS.forEach(agent => {
-      const isEnabled = this.config.agents[agent.id] ?? agent.defaultEnabled;
-      if (isEnabled && (agent.type === 'policy-token' || agent.type === 'training-crawler')) {
+    this.config.llms.forEach(llm => {
+      if (llm.enabled) {
         const manifest = {
-          name: `${agent.id}.json`,
+          name: `${llm.id}.json`,
           content: JSON.stringify({
             version: '1.0',
             generator: 'GEOforge',
@@ -213,7 +211,7 @@ export class ZipGenerator {
             technical: {
               preferred_format: 'json',
               rate_limit: '1req/sec',
-              user_agent: agent.robots[0] // Use first robot string
+              user_agent: this.getLLMUserAgent(llm.id)
             },
             content: {
               languages: [this.analysisResult.metadata.language || 'en'],
@@ -508,7 +506,7 @@ After deployment, verify the files are accessible:
 
 ## Enabled AI Systems
 
-${this.config.llms.filter(llm => llm.enabled).map(llm => `- **${llm.name}**: ${llm.description}`).join('\n')}
+${AGENTS.filter(agent => this.config.agents[agent.id] ?? agent.defaultEnabled).map(agent => `- **${agent.label}**: ${agent.description}`).join('\n')}
 
 ## Support
 
