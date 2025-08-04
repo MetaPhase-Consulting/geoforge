@@ -139,37 +139,74 @@ export class WebsiteAnalyzer {
   }
 
   async analyze(onProgress?: (progress: number, status: string) => void): Promise<AnalysisResult> {
+    console.log('🔍 WebsiteAnalyzer.analyze started');
+    console.log('📋 Config:', this.config);
+    
     try {
+      console.log('✅ Step 1: Validating URL...');
       onProgress?.(10, 'Validating URL...');
       await this.validateUrl();
+      console.log('✅ URL validation passed');
 
+      console.log('🌐 Step 2: Fetching main page...');
       onProgress?.(20, 'Fetching main page...');
       const mainPageContent = await this.fetchPage(this.config.url);
+      console.log('✅ Main page fetched, content length:', mainPageContent.length);
       
+      console.log('📄 Step 3: Analyzing HTML structure...');
       onProgress?.(30, 'Analyzing HTML structure...');
       await this.analyzeHtmlContent(mainPageContent);
+      console.log('✅ HTML analysis complete');
 
+      console.log('⚙️ Step 4: Checking technical aspects...');
       onProgress?.(40, 'Checking technical aspects...');
       await this.analyzeTechnicalAspects();
+      console.log('✅ Technical analysis complete');
 
+      console.log('📁 Step 5: Checking existing files...');
       onProgress?.(45, 'Checking existing files...');
       await this.checkExistingFiles();
+      console.log('✅ Existing files check complete');
 
+      console.log('🔍 Step 6: Analyzing SEO elements...');
       onProgress?.(50, 'Analyzing SEO elements...');
       await this.analyzeSeoElements(mainPageContent);
+      console.log('✅ SEO analysis complete');
 
+      console.log('⚡ Step 7: Measuring performance...');
       onProgress?.(60, 'Measuring performance...');
       await this.analyzePerformance();
+      console.log('✅ Performance analysis complete');
 
+      console.log('📦 Step 8: Discovering assets...');
       onProgress?.(70, 'Discovering assets...');
       await this.discoverAssets(mainPageContent);
+      console.log('✅ Asset discovery complete');
 
+      console.log('🎉 Step 9: Analysis complete!');
       onProgress?.(100, 'Analysis complete!');
       this.results.status = 'success';
+      console.log('✅ Final results:', this.results);
       
     } catch (error) {
+      console.error('💥 Error in WebsiteAnalyzer.analyze:', error);
+      console.error('🔍 Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
+      
       this.results.status = 'error';
-      this.results.errors.push(error instanceof Error ? error.message : 'Unknown error occurred');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      this.results.errors.push(errorMessage);
+      
+      // If we can't fetch the site at all, set a specific error
+      if (errorMessage.includes('Unable to fetch website content') || 
+          errorMessage.includes('Request timed out') ||
+          errorMessage.includes('Failed to fetch')) {
+        throw new Error('Website appears to be unreachable. Please check the URL and ensure the website is accessible.');
+      }
+      
       throw error;
     }
 
@@ -366,74 +403,182 @@ export class WebsiteAnalyzer {
     const url = new URL(this.config.url);
     const FILE_TIMEOUT = 5000; // 5 seconds for individual file checks
 
-    // Check for robots.txt
-    try {
-      const robotsTimeoutController = new AbortController();
-      const robotsTimeoutId = setTimeout(() => robotsTimeoutController.abort(), FILE_TIMEOUT);
-      
-      const robotsSignal = AbortSignal.any ? 
-        AbortSignal.any([this.abortController.signal, robotsTimeoutController.signal]) :
-        robotsTimeoutController.signal;
+    // CORS proxy services to try in sequence
+    const corsProxies = [
+      'https://api.allorigins.win/get?url=',
+      'https://corsproxy.io/?',
+      'https://thingproxy.freeboard.io/fetch/',
+      'https://cors-anywhere.herokuapp.com/',
+      'https://api.codetabs.com/v1/proxy?quest=',
+      'https://cors.bridged.cc/',
+      'https://api.codetabs.com/v1/proxy?quest='
+    ];
 
-      const robotsUrl = `${url.origin}/robots.txt`;
-      const robotsResponse = await fetch(robotsUrl, {
-        signal: robotsSignal
-      });
+    // Helper function to validate content type
+    const validateContent = (content: string, expectedType: 'robots' | 'sitemap'): boolean => {
+      const trimmedContent = content.trim();
       
-      clearTimeout(robotsTimeoutId);
+      if (expectedType === 'robots') {
+        // Check for robots.txt content patterns
+        const robotsPatterns = [
+          /^User-agent:/i,
+          /^Disallow:/i,
+          /^Allow:/i,
+          /^Sitemap:/i,
+          /^Crawl-delay:/i,
+          /^#/ // Comments
+        ];
+        
+        // Must contain at least one robots.txt directive or be empty
+        return trimmedContent === '' || robotsPatterns.some(pattern => pattern.test(trimmedContent));
+      } else if (expectedType === 'sitemap') {
+        // Check for XML sitemap content patterns
+        const xmlPatterns = [
+          /^<\?xml/i,
+          /<urlset/i,
+          /<sitemapindex/i,
+          /<url>/i,
+          /<loc>/i,
+          /<lastmod>/i
+        ];
+        
+        // Must contain XML declaration and sitemap structure
+        return xmlPatterns.some(pattern => pattern.test(trimmedContent));
+      }
       
-      if (robotsResponse.ok) {
-        const content = await robotsResponse.text();
-        this.results.technical.hasRobots = true;
-        this.results.existingFiles.robotsTxt = {
-          exists: true,
-          url: robotsUrl,
-          content: content
-        };
-      } else {
-        this.results.technical.hasRobots = false;
-        this.results.existingFiles.robotsTxt = { exists: false };
+      return false;
+    };
+
+    // Helper function to try direct fetch first, then CORS proxies
+    const fetchWithCorsFallback = async (targetUrl: string, timeout: number, expectedType: 'robots' | 'sitemap'): Promise<{ success: boolean; content?: string; error?: string }> => {
+      // Try direct fetch first
+      let timeoutId: number | null = null;
+      try {
+        const timeoutController = new AbortController();
+        timeoutId = setTimeout(() => timeoutController.abort(), timeout);
+        
+        const signal = AbortSignal.any ? 
+          AbortSignal.any([this.abortController.signal, timeoutController.signal]) :
+          timeoutController.signal;
+
+        const response = await fetch(targetUrl, {
+          signal,
+          headers: {
+            'User-Agent': 'GEOforge-Analyzer/1.0',
+            'Accept': 'text/plain,application/xml,text/xml;q=0.9,*/*;q=0.8'
+          }
+        });
+        
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        
+        if (response.ok) {
+          const content = await response.text();
+          // Validate that the content is actually the expected file type
+          if (validateContent(content, expectedType)) {
+            return { success: true, content };
+          } else {
+            console.warn(`Content validation failed for ${targetUrl} - expected ${expectedType} but got invalid content`);
+            return { success: false, error: `Invalid ${expectedType} content` };
+          }
+        }
+      } catch (directError) {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        console.warn(`Direct fetch failed for ${targetUrl}:`, directError);
       }
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.warn('Robots.txt check timed out or was cancelled');
+
+      // Try CORS proxies in sequence
+      for (const proxy of corsProxies) {
+        try {
+          const proxyUrl = proxy + encodeURIComponent(targetUrl);
+          const timeoutController = new AbortController();
+          timeoutId = setTimeout(() => timeoutController.abort(), timeout);
+          
+          const signal = AbortSignal.any ? 
+            AbortSignal.any([this.abortController.signal, timeoutController.signal]) :
+            timeoutController.signal;
+
+          const response = await fetch(proxyUrl, {
+            signal,
+            headers: {
+              'User-Agent': 'GEOforge-Analyzer/1.0',
+              'Accept': 'text/plain,application/xml,text/xml;q=0.9,*/*;q=0.8'
+            }
+          });
+          
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+          
+          if (response.ok) {
+            let content: string;
+            
+            // Handle different proxy response formats
+            if (proxy.includes('allorigins.win')) {
+              const data = await response.json();
+              content = data.contents;
+            } else if (proxy.includes('codetabs.com')) {
+              const data = await response.json();
+              content = data.data;
+            } else {
+              content = await response.text();
+            }
+            
+            // Validate that the content is actually the expected file type
+            if (validateContent(content, expectedType)) {
+              return { success: true, content };
+            } else {
+              console.warn(`Content validation failed for ${targetUrl} via proxy ${proxy} - expected ${expectedType} but got invalid content`);
+              continue; // Try next proxy
+            }
+          }
+        } catch (proxyError) {
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+          console.warn(`Proxy ${proxy} failed for ${targetUrl}:`, proxyError);
+          continue; // Try next proxy
+        }
       }
+
+      return { success: false, error: 'All direct and proxy attempts failed' };
+    };
+
+    // Check for robots.txt
+    const robotsUrl = `${url.origin}/robots.txt`;
+    const robotsResult = await fetchWithCorsFallback(robotsUrl, FILE_TIMEOUT, 'robots');
+    
+    if (robotsResult.success && robotsResult.content) {
+      this.results.technical.hasRobots = true;
+      this.results.existingFiles.robotsTxt = {
+        exists: true,
+        url: robotsUrl,
+        content: robotsResult.content
+      };
+    } else {
       this.results.technical.hasRobots = false;
       this.results.existingFiles.robotsTxt = { exists: false };
     }
 
-    // Check for sitemap
-    try {
-      const sitemapTimeoutController = new AbortController();
-      const sitemapTimeoutId = setTimeout(() => sitemapTimeoutController.abort(), FILE_TIMEOUT);
-      
-      const sitemapSignal = AbortSignal.any ? 
-        AbortSignal.any([this.abortController.signal, sitemapTimeoutController.signal]) :
-        sitemapTimeoutController.signal;
-
-      const sitemapUrl = `${url.origin}/sitemap.xml`;
-      const sitemapResponse = await fetch(sitemapUrl, {
-        signal: sitemapSignal
-      });
-      
-      clearTimeout(sitemapTimeoutId);
-      
-      if (sitemapResponse.ok) {
-        const content = await sitemapResponse.text();
-        this.results.technical.hasSitemap = true;
-        this.results.existingFiles.sitemap = {
-          exists: true,
-          url: sitemapUrl,
-          content: content
-        };
-      } else {
-        this.results.technical.hasSitemap = false;
-        this.results.existingFiles.sitemap = { exists: false };
-      }
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.warn('Sitemap.xml check timed out or was cancelled');
-      }
+    // Check for sitemap.xml
+    const sitemapUrl = `${url.origin}/sitemap.xml`;
+    const sitemapResult = await fetchWithCorsFallback(sitemapUrl, FILE_TIMEOUT, 'sitemap');
+    
+    if (sitemapResult.success && sitemapResult.content) {
+      this.results.technical.hasSitemap = true;
+      this.results.existingFiles.sitemap = {
+        exists: true,
+        url: sitemapUrl,
+        content: sitemapResult.content
+      };
+    } else {
       this.results.technical.hasSitemap = false;
       this.results.existingFiles.sitemap = { exists: false };
     }

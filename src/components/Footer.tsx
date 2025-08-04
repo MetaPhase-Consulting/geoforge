@@ -23,6 +23,18 @@ export default function Footer() {
                 <Github className="w-4 h-4" />
                 <a href="https://github.com/brianfunk/geoforge" target="_blank" rel="noopener noreferrer" className="hover:text-gold transition-colors">Open Source</a>
               </div>
+              <span className="text-charcoal/70 dark:text-silver">|</span>
+              <span className="text-charcoal/70 dark:text-silver">
+                Built by{' '}
+                <a 
+                  href="https://metaphase.tech" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-orange-500 hover:text-gold hover:underline transition-all duration-300 font-semibold shimmer-text"
+                >
+                  MetaPhase
+                </a>
+              </span>
             </div>
             <div className="text-charcoal/70 dark:text-silver font-work-sans text-sm">
               © 2025 GEOforge

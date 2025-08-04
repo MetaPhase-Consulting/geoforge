@@ -18,68 +18,127 @@ export class ZipGenerator {
   }
 
   async generateAndDownload(onProgress?: (progress: number, status: string) => void): Promise<void> {
+    console.log('📦 ZipGenerator.generateAndDownload started');
+    console.log('⚙️ Config:', this.config);
+    console.log('📊 Analysis Result status:', this.analysisResult.status);
+    
     const zip = new JSZip();
+    console.log('📁 JSZip instance created');
 
     try {
+      console.log('🤖 Step 1: Generating robots.txt...');
       onProgress?.(10, 'Generating robots.txt...');
       const robotsTxt = this.generateRobotsTxt();
+      console.log('✅ robots.txt generated, size:', robotsTxt.content.length, 'chars');
       zip.file('robots.txt', robotsTxt.content);
 
+      console.log('🗺️ Step 2: Generating sitemap.xml...');
       onProgress?.(20, 'Generating sitemap.xml...');
       if (this.config.includeSitemap) {
         const sitemap = this.generateSitemap();
+        console.log('✅ sitemap.xml generated, size:', sitemap.content.length, 'chars');
         zip.file('sitemap.xml', sitemap.content);
+      } else {
+        console.log('⏭️ Skipping sitemap.xml (not included in config)');
       }
 
+      console.log('👥 Step 3: Generating humans.txt...');
       onProgress?.(30, 'Generating humans.txt...');
       if (this.config.includeHumans) {
         const humansTxt = this.generateHumansTxt();
+        console.log('✅ humans.txt generated, size:', humansTxt.content.length, 'chars');
         zip.file('humans.txt', humansTxt.content);
+      } else {
+        console.log('⏭️ Skipping humans.txt (not included in config)');
       }
 
-      onProgress?.(40, 'Generating LLM manifests...');
+      console.log('🤖 Step 4: Generating AI agent manifests...');
+      onProgress?.(40, 'Generating AI agent manifests...');
       const manifests = this.generateLLMManifests();
-      manifests.forEach(manifest => {
-        zip.file(manifest.name, manifest.content);
-      });
+      console.log('📋 Generated manifests:', manifests.length);
+      if (manifests && manifests.length > 0) {
+        manifests.forEach((manifest, index) => {
+          console.log(`📄 Adding manifest ${index + 1}: ${manifest.name} (${manifest.content.length} chars)`);
+          zip.file(manifest.name, manifest.content);
+        });
+      } else {
+        console.log('⚠️ No manifests generated');
+      }
 
+      console.log('📊 Step 5: Generating analysis report...');
       onProgress?.(50, 'Generating analysis report...');
       const analysisReport = this.generateAnalysisReport();
+      console.log('✅ analysis-report.html generated, size:', analysisReport.content.length, 'chars');
       zip.file('analysis-report.html', analysisReport.content);
-      zip.file('analysis-data.json', JSON.stringify(this.analysisResult, null, 2));
+      
+      const analysisData = JSON.stringify(this.analysisResult, null, 2);
+      console.log('✅ analysis-data.json generated, size:', analysisData.length, 'chars');
+      zip.file('analysis-data.json', analysisData);
 
+      console.log('⚙️ Step 6: Generating configuration files...');
       onProgress?.(60, 'Generating configuration files...');
       const configFiles = this.generateConfigFiles();
-      configFiles.forEach(file => {
-        zip.file(file.name, file.content);
-      });
+      console.log('📋 Generated config files:', configFiles.length);
+      if (configFiles && configFiles.length > 0) {
+        configFiles.forEach((file, index) => {
+          console.log(`📄 Adding config file ${index + 1}: ${file.name} (${file.content.length} chars)`);
+          zip.file(file.name, file.content);
+        });
+      } else {
+        console.log('⚠️ No config files generated');
+      }
 
+      console.log('📚 Step 7: Adding documentation...');
       onProgress?.(70, 'Adding documentation...');
       const documentation = this.generateDocumentation();
+      console.log('✅ README.md generated, size:', documentation.content.length, 'chars');
       zip.file('README.md', documentation.content);
 
+      console.log('📖 Step 8: Creating deployment guide...');
       onProgress?.(80, 'Creating deployment guide...');
       const deploymentGuide = this.generateDeploymentGuide();
+      console.log('✅ DEPLOYMENT.md generated, size:', deploymentGuide.content.length, 'chars');
       zip.file('DEPLOYMENT.md', deploymentGuide.content);
 
+      console.log('🗜️ Step 9: Compressing files...');
       onProgress?.(90, 'Compressing files...');
       const compressionLevel = this.getCompressionLevel();
+      console.log('🔧 Compression level:', compressionLevel);
+      
+      console.log('📦 Generating ZIP blob...');
       const blob = await zip.generateAsync({
         type: 'blob',
         compression: 'DEFLATE',
         compressionOptions: { level: compressionLevel }
       });
+      console.log('✅ ZIP blob generated, size:', blob.size, 'bytes');
 
+      console.log('💾 Step 10: Starting download...');
       onProgress?.(100, 'Download starting...');
       const filename = `${this.config.siteName || 'geoforge'}-geo-files-${new Date().toISOString().split('T')[0]}.zip`;
+      console.log('📁 Filename:', filename);
+      
+      console.log('🚀 Calling saveAs...');
       saveAs(blob, filename);
+      console.log('✅ saveAs called successfully');
 
     } catch (error) {
+      console.error('💥 Error in generateAndDownload:', error);
+      console.error('🔍 Error type:', typeof error);
+      console.error('🔍 Error constructor:', error?.constructor?.name);
+      console.error('🔍 Error message:', error instanceof Error ? error.message : 'No message');
+      console.error('🔍 Error stack:', error instanceof Error ? error.stack : 'No stack');
+      
       throw new Error(`Failed to generate ZIP file: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   private generateRobotsTxt(): GeneratedFile {
+    console.log('🤖 generateRobotsTxt started');
+    console.log('🔧 Config agents:', this.config.agents);
+    console.log('🔧 Config allowTraining:', this.config.allowTraining);
+    console.log('🔧 Config includeSitemap:', this.config.includeSitemap);
+    
     const lines: string[] = [];
     
     lines.push('# Robots.txt generated by GEOforge');
@@ -96,16 +155,22 @@ export class ZipGenerator {
     lines.push('Allow: /');
     lines.push('');
 
-    // AI crawlers
+    // AI crawlers - use agents from config
     lines.push('# AI Training Crawlers');
-    this.config.llms.forEach(llm => {
-      const userAgent = this.getLLMUserAgent(llm.id);
-      if (userAgent) {
-        lines.push(`User-agent: ${userAgent}`);
-        lines.push(llm.enabled ? 'Allow: /' : 'Disallow: /');
-        lines.push('');
-      }
-    });
+    if (this.config.agents && typeof this.config.agents === 'object') {
+      console.log('📋 Processing agents:', Object.keys(this.config.agents));
+      Object.entries(this.config.agents).forEach(([agentId, enabled]) => {
+        console.log(`🤖 Processing agent: ${agentId} (enabled: ${enabled})`);
+        const userAgent = this.getAgentUserAgent(agentId);
+        if (userAgent) {
+          lines.push(`User-agent: ${userAgent}`);
+          lines.push(enabled ? 'Allow: /' : 'Disallow: /');
+          lines.push('');
+        }
+      });
+    } else {
+      console.log('⚠️ No agents config found or invalid format');
+    }
 
     // General AI training policy
     if (!this.config.allowTraining) {
@@ -126,15 +191,32 @@ export class ZipGenerator {
       lines.push(`Sitemap: ${new URL('/sitemap.xml', this.config.url).href}`);
     }
 
+    const content = lines.join('\n');
+    console.log('✅ robots.txt content generated, length:', content.length);
+    
     return {
       name: 'robots.txt',
-      content: lines.join('\n'),
+      content: content,
       type: 'text'
     };
   }
 
   private generateSitemap(): GeneratedFile {
-    const urls = [this.config.url, ...this.analysisResult.crawledPages];
+    // Always include the main URL, even if no other pages were crawled
+    const urls = [this.config.url];
+    
+    // Add crawled pages if they exist and are valid URLs
+    if (this.analysisResult.crawledPages && Array.isArray(this.analysisResult.crawledPages)) {
+      urls.push(...this.analysisResult.crawledPages.filter(url => {
+        try {
+          new URL(url);
+          return true;
+        } catch {
+          return false; // Skip invalid URLs
+        }
+      }));
+    }
+    
     const uniqueUrls = [...new Set(urls)];
 
     const lines: string[] = [];
@@ -183,59 +265,126 @@ export class ZipGenerator {
   }
 
   private generateLLMManifests(): GeneratedFile[] {
+    console.log('🤖 generateLLMManifests started');
+    console.log('🔧 Config agents:', this.config.agents);
+    console.log('🔧 Analysis result metadata:', this.analysisResult.metadata);
+    
     const manifests: GeneratedFile[] = [];
 
-    this.config.llms.forEach(llm => {
-      if (llm.enabled) {
-        const manifest = {
-          name: `${llm.id}.json`,
-          content: JSON.stringify({
-            version: '1.0',
-            generator: 'GEOforge',
-            generated: new Date().toISOString(),
-            website: {
-              url: this.config.url,
-              name: this.config.siteName,
-              description: this.analysisResult.metadata.description
-            },
-            permissions: {
-              crawling: true,
-              training: this.config.allowTraining,
-              indexing: true
-            },
-            policies: {
-              attribution: 'required',
-              commercial_use: 'allowed',
-              modification: 'allowed'
-            },
-            technical: {
-              preferred_format: 'json',
-              rate_limit: '1req/sec',
-              user_agent: this.getLLMUserAgent(llm.id)
-            },
-            content: {
-              languages: [this.analysisResult.metadata.language || 'en'],
-              topics: this.analysisResult.metadata.keywords,
-              last_updated: new Date().toISOString()
-            }
-          }, null, 2),
-          type: 'json' as const
-        };
-        manifests.push(manifest);
-      }
-    });
+    // Use agents from config instead of llms
+    if (this.config.agents && typeof this.config.agents === 'object') {
+      console.log('📋 Processing agents for manifests:', Object.keys(this.config.agents));
+      Object.entries(this.config.agents).forEach(([agentId, enabled]) => {
+        console.log(`🤖 Processing agent for manifest: ${agentId} (enabled: ${enabled})`);
+        if (enabled) {
+          try {
+            const manifestData = {
+              version: '1.0',
+              generator: 'GEOforge',
+              generated: new Date().toISOString(),
+              website: {
+                url: this.config.url,
+                name: this.config.siteName,
+                description: this.analysisResult.metadata?.description || 'No description available'
+              },
+              permissions: {
+                crawling: true,
+                training: this.config.allowTraining,
+                indexing: true
+              },
+              policies: {
+                attribution: 'required',
+                commercial_use: 'allowed',
+                modification: 'allowed'
+              },
+              technical: {
+                preferred_format: 'json',
+                rate_limit: '1req/sec',
+                user_agent: this.getAgentUserAgent(agentId)
+              },
+              content: {
+                languages: [this.analysisResult.metadata?.language || 'en'],
+                topics: this.analysisResult.metadata?.keywords || [],
+                last_updated: new Date().toISOString()
+              }
+            };
+            
+            const manifest = {
+              name: `${agentId}.json`,
+              content: JSON.stringify(manifestData, null, 2),
+              type: 'json' as const
+            };
+            
+            console.log(`✅ Generated manifest for ${agentId}, size: ${manifest.content.length} chars`);
+            manifests.push(manifest);
+          } catch (error) {
+            console.error(`❌ Error generating manifest for ${agentId}:`, error);
+          }
+        }
+      });
+    } else {
+      console.log('⚠️ No agents config found or invalid format for manifests');
+    }
 
+    console.log(`📋 Total manifests generated: ${manifests.length}`);
     return manifests;
   }
 
   private generateAnalysisReport(): GeneratedFile {
+    // Ensure we have safe defaults for all properties
+    const safeResult = {
+      metadata: {
+        title: this.analysisResult.metadata?.title || 'Unknown',
+        description: this.analysisResult.metadata?.description || 'No description available',
+        keywords: this.analysisResult.metadata?.keywords || [],
+        author: this.analysisResult.metadata?.author || '',
+        language: this.analysisResult.metadata?.language || 'en',
+        charset: this.analysisResult.metadata?.charset || ''
+      },
+      technical: {
+        statusCode: this.analysisResult.technical?.statusCode || 0,
+        responseTime: this.analysisResult.technical?.responseTime || 0,
+        sslEnabled: this.analysisResult.technical?.sslEnabled || false,
+        hasRobots: this.analysisResult.technical?.hasRobots || false,
+        hasSitemap: this.analysisResult.technical?.hasSitemap || false,
+        contentType: this.analysisResult.technical?.contentType || '',
+        contentLength: this.analysisResult.technical?.contentLength || 0
+      },
+      seo: {
+        headings: this.analysisResult.seo?.headings || [],
+        images: this.analysisResult.seo?.images || [],
+        links: this.analysisResult.seo?.links || [],
+        metaTags: this.analysisResult.seo?.metaTags || {}
+      },
+      performance: {
+        loadTime: this.analysisResult.performance?.loadTime || 0,
+        firstContentfulPaint: this.analysisResult.performance?.firstContentfulPaint || 0,
+        largestContentfulPaint: this.analysisResult.performance?.largestContentfulPaint || 0,
+        cumulativeLayoutShift: this.analysisResult.performance?.cumulativeLayoutShift || 0,
+        domContentLoaded: this.analysisResult.performance?.domContentLoaded || 0,
+        firstInputDelay: this.analysisResult.performance?.firstInputDelay || 0
+      },
+      accessibility: {
+        score: this.analysisResult.accessibility?.score || 0,
+        issues: this.analysisResult.accessibility?.issues || []
+      },
+      assets: {
+        stylesheets: this.analysisResult.assets?.stylesheets || [],
+        scripts: this.analysisResult.assets?.scripts || [],
+        images: this.analysisResult.assets?.images || [],
+        fonts: this.analysisResult.assets?.fonts || [],
+        other: this.analysisResult.assets?.other || []
+      },
+      errors: this.analysisResult.errors || []
+    };
+
     const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Analysis Report - ${this.config.siteName}</title>
+    <title>Website Analysis Report - ${this.config.siteName || 'Unknown Site'}</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
         .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -266,15 +415,15 @@ export class ZipGenerator {
             </div>
             <div class="metric">
                 <span class="metric-label">Status Code</span>
-                <span class="metric-value ${this.analysisResult.technical.statusCode === 200 ? 'success' : 'error'}">${this.analysisResult.technical.statusCode}</span>
+                <span class="metric-value ${safeResult.technical.statusCode === 200 ? 'success' : 'error'}">${safeResult.technical.statusCode}</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Response Time</span>
-                <span class="metric-value">${this.analysisResult.technical.responseTime}ms</span>
+                <span class="metric-value">${safeResult.technical.responseTime}ms</span>
             </div>
             <div class="metric">
                 <span class="metric-label">SSL Enabled</span>
-                <span class="metric-value ${this.analysisResult.technical.sslEnabled ? 'success' : 'error'}">${this.analysisResult.technical.sslEnabled ? 'Yes' : 'No'}</span>
+                <span class="metric-value ${safeResult.technical.sslEnabled ? 'success' : 'error'}">${safeResult.technical.sslEnabled ? 'Yes' : 'No'}</span>
             </div>
         </div>
 
@@ -282,22 +431,22 @@ export class ZipGenerator {
         <div class="grid">
             <div class="card">
                 <h3>Page Title</h3>
-                <p>${this.analysisResult.metadata.title || 'No title found'}</p>
+                <p>${safeResult.metadata.title}</p>
             </div>
             <div class="card">
                 <h3>Meta Description</h3>
-                <p>${this.analysisResult.metadata.description || 'No description found'}</p>
+                <p>${safeResult.metadata.description}</p>
             </div>
             <div class="card">
                 <h3>Headings Structure</h3>
                 <ul>
-                    ${this.analysisResult.seo.headings.slice(0, 10).map(h => `<li>H${h.level}: ${h.text}</li>`).join('')}
+                    ${safeResult.seo.headings.slice(0, 10).map(h => `<li>H${h.level}: ${h.text}</li>`).join('')}
                 </ul>
             </div>
             <div class="card">
                 <h3>Images</h3>
-                <p>Total: ${this.analysisResult.seo.images.length}</p>
-                <p>Missing Alt Text: ${this.analysisResult.seo.images.filter(img => !img.alt).length}</p>
+                <p>Total: ${safeResult.seo.images.length}</p>
+                <p>Missing Alt Text: ${safeResult.seo.images.filter(img => !img.alt).length}</p>
             </div>
         </div>
 
@@ -305,32 +454,32 @@ export class ZipGenerator {
         <div class="grid">
             <div class="metric">
                 <span class="metric-label">Load Time</span>
-                <span class="metric-value">${Math.round(this.analysisResult.performance.loadTime)}ms</span>
+                <span class="metric-value">${Math.round(safeResult.performance.loadTime)}ms</span>
             </div>
             <div class="metric">
                 <span class="metric-label">First Contentful Paint</span>
-                <span class="metric-value">${Math.round(this.analysisResult.performance.firstContentfulPaint)}ms</span>
+                <span class="metric-value">${Math.round(safeResult.performance.firstContentfulPaint)}ms</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Largest Contentful Paint</span>
-                <span class="metric-value">${Math.round(this.analysisResult.performance.largestContentfulPaint)}ms</span>
+                <span class="metric-value">${Math.round(safeResult.performance.largestContentfulPaint)}ms</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Cumulative Layout Shift</span>
-                <span class="metric-value">${this.analysisResult.performance.cumulativeLayoutShift.toFixed(3)}</span>
+                <span class="metric-value">${safeResult.performance.cumulativeLayoutShift.toFixed(3)}</span>
             </div>
         </div>
 
         <h2>Accessibility Score</h2>
         <div class="metric">
             <span class="metric-label">Overall Score</span>
-            <span class="metric-value ${this.analysisResult.accessibility.score >= 80 ? 'success' : this.analysisResult.accessibility.score >= 60 ? 'warning' : 'error'}">${this.analysisResult.accessibility.score}/100</span>
+            <span class="metric-value ${safeResult.accessibility.score >= 80 ? 'success' : safeResult.accessibility.score >= 60 ? 'warning' : 'error'}">${safeResult.accessibility.score}/100</span>
         </div>
 
-        ${this.analysisResult.accessibility.issues.length > 0 ? `
+        ${safeResult.accessibility.issues.length > 0 ? `
         <h3>Accessibility Issues</h3>
         <ul>
-            ${this.analysisResult.accessibility.issues.map(issue => `<li class="${issue.severity}">${issue.message}</li>`).join('')}
+            ${safeResult.accessibility.issues.map(issue => `<li class="${issue.severity}">${issue.message}</li>`).join('')}
         </ul>
         ` : ''}
 
@@ -338,51 +487,51 @@ export class ZipGenerator {
         <div class="grid">
             <div class="card">
                 <h3>Robots.txt</h3>
-                <p class="${this.analysisResult.technical.hasRobots ? 'success' : 'warning'}">${this.analysisResult.technical.hasRobots ? 'Found' : 'Not found'}</p>
+                <p class="${safeResult.technical.hasRobots ? 'success' : 'warning'}">${safeResult.technical.hasRobots ? 'Found' : 'Not found'}</p>
             </div>
             <div class="card">
                 <h3>Sitemap</h3>
-                <p class="${this.analysisResult.technical.hasSitemap ? 'success' : 'warning'}">${this.analysisResult.technical.hasSitemap ? 'Found' : 'Not found'}</p>
+                <p class="${safeResult.technical.hasSitemap ? 'success' : 'warning'}">${safeResult.technical.hasSitemap ? 'Found' : 'Not found'}</p>
             </div>
             <div class="card">
                 <h3>Content Type</h3>
-                <p>${this.analysisResult.technical.contentType}</p>
+                <p>${safeResult.technical.contentType}</p>
             </div>
             <div class="card">
                 <h3>Content Length</h3>
-                <p>${this.formatBytes(this.analysisResult.technical.contentLength)}</p>
+                <p>${this.formatBytes(safeResult.technical.contentLength)}</p>
             </div>
         </div>
 
         <h2>Discovered Assets</h2>
         <div class="grid">
             <div class="card">
-                <h3>Stylesheets (${this.analysisResult.assets.stylesheets.length})</h3>
+                <h3>Stylesheets (${safeResult.assets.stylesheets.length})</h3>
                 <ul>
-                    ${this.analysisResult.assets.stylesheets.slice(0, 5).map(css => `<li>${css}</li>`).join('')}
-                    ${this.analysisResult.assets.stylesheets.length > 5 ? `<li>... and ${this.analysisResult.assets.stylesheets.length - 5} more</li>` : ''}
+                    ${safeResult.assets.stylesheets.slice(0, 5).map(css => `<li>${css}</li>`).join('')}
+                    ${safeResult.assets.stylesheets.length > 5 ? `<li>... and ${safeResult.assets.stylesheets.length - 5} more</li>` : ''}
                 </ul>
             </div>
             <div class="card">
-                <h3>Scripts (${this.analysisResult.assets.scripts.length})</h3>
+                <h3>Scripts (${safeResult.assets.scripts.length})</h3>
                 <ul>
-                    ${this.analysisResult.assets.scripts.slice(0, 5).map(js => `<li>${js}</li>`).join('')}
-                    ${this.analysisResult.assets.scripts.length > 5 ? `<li>... and ${this.analysisResult.assets.scripts.length - 5} more</li>` : ''}
+                    ${safeResult.assets.scripts.slice(0, 5).map(js => `<li>${js}</li>`).join('')}
+                    ${safeResult.assets.scripts.length > 5 ? `<li>... and ${safeResult.assets.scripts.length - 5} more</li>` : ''}
                 </ul>
             </div>
             <div class="card">
-                <h3>Images (${this.analysisResult.assets.images.length})</h3>
+                <h3>Images (${safeResult.assets.images.length})</h3>
                 <ul>
-                    ${this.analysisResult.assets.images.slice(0, 5).map(img => `<li>${img}</li>`).join('')}
-                    ${this.analysisResult.assets.images.length > 5 ? `<li>... and ${this.analysisResult.assets.images.length - 5} more</li>` : ''}
+                    ${safeResult.assets.images.slice(0, 5).map(img => `<li>${img}</li>`).join('')}
+                    ${safeResult.assets.images.length > 5 ? `<li>... and ${safeResult.assets.images.length - 5} more</li>` : ''}
                 </ul>
             </div>
         </div>
 
-        ${this.analysisResult.errors.length > 0 ? `
+        ${safeResult.errors.length > 0 ? `
         <h2>Errors & Warnings</h2>
         <ul>
-            ${this.analysisResult.errors.map(error => `<li class="error">${error}</li>`).join('')}
+            ${safeResult.errors.map(error => `<li class="error">${error}</li>`).join('')}
         </ul>
         ` : ''}
 
@@ -402,60 +551,78 @@ export class ZipGenerator {
   }
 
   private generateConfigFiles(): GeneratedFile[] {
+    console.log('⚙️ generateConfigFiles started');
+    console.log('🔧 Config agents:', this.config.agents);
+    console.log('🔧 Config allowTraining:', this.config.allowTraining);
+    
     const files: GeneratedFile[] = [];
 
-    // .well-known/ai.txt
-    const aiTxt = [
-      '# AI.txt - AI Interaction Guidelines',
-      `# Generated by GEOforge for ${this.config.url}`,
-      '',
-      '# Training Permission',
-      `training: ${this.config.allowTraining ? 'allowed' : 'disallowed'}`,
-      '',
-      '# Crawling Rules',
-      'crawling: allowed',
-      'rate-limit: 1req/sec',
-      '',
-      '# Attribution',
-      'attribution: required',
-      `source: ${this.config.url}`,
-      '',
-      '# Contact',
-      `website: ${this.config.url}`,
-      `updated: ${new Date().toISOString().split('T')[0]}`
-    ].join('\n');
+    try {
+      // .well-known/ai.txt
+      console.log('📄 Generating ai.txt...');
+      const aiTxt = [
+        '# AI.txt - AI Interaction Guidelines',
+        `# Generated by GEOforge for ${this.config.url}`,
+        '',
+        '# Training Permission',
+        `training: ${this.config.allowTraining ? 'allowed' : 'disallowed'}`,
+        '',
+        '# Crawling Rules',
+        'crawling: allowed',
+        'rate-limit: 1req/sec',
+        '',
+        '# Attribution',
+        'attribution: required',
+        `source: ${this.config.url}`,
+        '',
+        '# Contact',
+        `website: ${this.config.url}`,
+        `updated: ${new Date().toISOString().split('T')[0]}`
+      ].join('\n');
 
-    files.push({
-      name: '.well-known/ai.txt',
-      content: aiTxt,
-      type: 'text'
-    });
+      files.push({
+        name: '.well-known/ai.txt',
+        content: aiTxt,
+        type: 'text'
+      });
+      console.log('✅ ai.txt generated, size:', aiTxt.length, 'chars');
 
-    // llms.txt
-    const llmsTxt = [
-      '# LLMs.txt - Large Language Model Directives',
-      `# For: ${this.config.url}`,
-      `# Generated: ${new Date().toISOString()}`,
-      '',
-      '# Enabled AI Systems:',
-      ...this.config.llms.filter(llm => llm.enabled).map(llm => `# - ${llm.name}: ${llm.description}`),
-      '',
-      '# Training Policy:',
-      `# Content may ${this.config.allowTraining ? '' : 'NOT '}be used for AI training`,
-      '',
-      '# Usage Guidelines:',
-      '# - Respect robots.txt directives',
-      '# - Provide attribution when using content',
-      '# - Follow rate limiting guidelines',
-      '# - Check vendor-specific manifest files'
-    ].join('\n');
+      // llms.txt
+      console.log('📄 Generating llms.txt...');
+      const enabledAgents = this.config.agents ? 
+        Object.entries(this.config.agents).filter(([_, enabled]) => enabled).map(([agentId, _]) => agentId) : 
+        [];
+      
+      const llmsTxt = [
+        '# LLMs.txt - Large Language Model Directives',
+        `# For: ${this.config.url}`,
+        `# Generated: ${new Date().toISOString()}`,
+        '',
+        '# Enabled AI Systems:',
+        ...enabledAgents.map(agentId => `# - ${agentId}: AI agent configuration`),
+        '',
+        '# Training Policy:',
+        `# Content may ${this.config.allowTraining ? '' : 'NOT '}be used for AI training`,
+        '',
+        '# Usage Guidelines:',
+        '# - Respect robots.txt directives',
+        '# - Provide attribution when using content',
+        '# - Follow rate limiting guidelines',
+        '# - Check vendor-specific manifest files'
+      ].join('\n');
 
-    files.push({
-      name: 'llms.txt',
-      content: llmsTxt,
-      type: 'text'
-    });
+      files.push({
+        name: 'llms.txt',
+        content: llmsTxt,
+        type: 'text'
+      });
+      console.log('✅ llms.txt generated, size:', llmsTxt.length, 'chars');
 
+    } catch (error) {
+      console.error('❌ Error in generateConfigFiles:', error);
+    }
+
+    console.log(`📋 Total config files generated: ${files.length}`);
     return files;
   }
 
@@ -473,7 +640,7 @@ This package contains AI-ready optimization files generated by GEOforge for **${
 - \`llms.txt\` - Large Language Model directives
 
 ### AI Vendor Manifests
-${this.config.llms.filter(llm => llm.enabled).map(llm => `- \`${llm.id}.json\` - ${llm.name} specific configuration`).join('\n')}
+${this.config.agents ? Object.entries(this.config.agents).filter(([_, enabled]) => enabled).map(([agentId, _]) => `- \`${agentId}.json\` - ${agentId} specific configuration`).join('\n') : 'No AI agents configured'}
 
 ### Analysis & Reports
 - \`analysis-report.html\` - Comprehensive website analysis report
@@ -506,7 +673,7 @@ After deployment, verify the files are accessible:
 
 ## Enabled AI Systems
 
-${this.config.llms.filter(llm => llm.enabled).map(llm => `- **${llm.name}**: ${llm.description}`).join('\n')}
+${this.config.agents ? Object.entries(this.config.agents).filter(([_, enabled]) => enabled).map(([agentId, _]) => `- **${agentId}**: AI agent configuration`).join('\n') : 'No AI agents enabled'}
 
 ## Support
 
@@ -545,7 +712,7 @@ your-website-root/
 ├── llms.txt
 ├── .well-known/
 │   └── ai.txt
-${this.config.llms.filter(llm => llm.enabled).map(llm => `├── ${llm.id}.json`).join('\n')}
+${this.config.agents ? Object.entries(this.config.agents).filter(([_, enabled]) => enabled).map(([agentId, _]) => `├── ${agentId}.json`).join('\n') : ''}
 \`\`\`
 
 ## Server Configuration
@@ -583,7 +750,7 @@ After deployment, check these URLs return HTTP 200:
 - [ ] ${this.config.url}/humans.txt
 - [ ] ${this.config.url}/llms.txt
 - [ ] ${this.config.url}/.well-known/ai.txt
-${this.config.llms.filter(llm => llm.enabled).map(llm => `- [ ] ${this.config.url}/${llm.id}.json`).join('\n')}
+${this.config.agents ? Object.entries(this.config.agents).filter(([_, enabled]) => enabled).map(([agentId, _]) => `- [ ] ${this.config.url}/${agentId}.json`).join('\n') : ''}
 
 ## Testing AI Crawler Access
 
@@ -649,5 +816,24 @@ Generated by GEOforge on ${new Date().toLocaleString()}
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  private getAgentUserAgent(agentId: string): string {
+    // Map agent IDs to their user agent strings
+    const agentUserAgents: Record<string, string> = {
+      'gptbot': 'GPTBot',
+      'chatgpt-user': 'ChatGPT-User',
+      'oai-search': 'OAI-SearchBot',
+      'claudebot': 'ClaudeBot',
+      'claude-search': 'Claude-SearchBot',
+      'claude-user': 'Claude-User',
+      'perplexitybot': 'PerplexityBot',
+      'perplexity-user': 'Perplexity-User',
+      'bingbot': 'Bingbot',
+      'google-extended': 'Google-Extended',
+      'applebot-ext': 'Applebot-Extended'
+    };
+    
+    return agentUserAgents[agentId] || agentId;
   }
 }

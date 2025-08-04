@@ -88,10 +88,13 @@ export default function Online() {
       
       setAnalysisResult(result);
       
-      // Auto-populate site name if not provided
-      if (!config.siteName.trim() && result.metadata.title) {
+      // Always override site name with page title
+      if (result.metadata.title) {
         const cleanTitle = result.metadata.title.replace(/\s*\|\s*.*$/, '').trim(); // Remove " | Site Name" suffixes
+        console.log('📝 Setting site name from page title:', cleanTitle);
         setConfig(prev => ({ ...prev, siteName: cleanTitle }));
+      } else {
+        console.log('⚠️ No page title found, keeping existing site name');
       }
       
     } catch (err) {
@@ -104,8 +107,14 @@ export default function Online() {
   };
 
   const handleGenerate = async () => {
+    console.log('🚀 Starting ZIP generation...');
+    console.log('📋 Config:', config);
+    console.log('📊 Analysis Result:', analysisResult);
+    
     if (!analysisResult) {
-      setError('Please analyze your website first');
+      const errorMsg = 'Please analyze your website first';
+      console.error('❌ No analysis result available:', errorMsg);
+      setError(errorMsg);
       return;
     }
 
@@ -114,14 +123,29 @@ export default function Online() {
     setGenerationProgress({ progress: 0, status: 'Preparing files...' });
 
     try {
+      console.log('📦 Creating ZipGenerator instance...');
       const zipGenerator = new ZipGenerator(config, analysisResult);
+      
+      console.log('⚙️ Starting generateAndDownload...');
       await zipGenerator.generateAndDownload((progress, status) => {
+        console.log(`📈 Progress: ${progress}% - ${status}`);
         setGenerationProgress({ progress, status });
       });
+      
+      console.log('✅ ZIP generation completed successfully!');
     } catch (err) {
+      console.error('💥 ZIP generation failed:', err);
+      console.error('🔍 Error details:', {
+        name: err instanceof Error ? err.name : 'Unknown',
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : 'No stack trace'
+      });
+      
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate files. Please try again.';
+      console.error('📝 Setting error message:', errorMessage);
       setError(errorMessage);
     } finally {
+      console.log('🏁 ZIP generation process finished');
       setIsGenerating(false);
     }
   };
@@ -559,6 +583,29 @@ export default function Online() {
                     className="bg-gold h-2 rounded-full transition-all duration-300"
                     style={{ width: `${generationProgress.progress}%` }}
                   />
+                </div>
+              </div>
+            )}
+            
+            {/* Error Display */}
+            {error && (
+              <div className="mt-4 max-w-md mx-auto p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-work-sans font-medium text-red-800 dark:text-red-200">
+                      Generation Error
+                    </h3>
+                    <p className="mt-1 text-sm text-red-700 dark:text-red-300 font-work-sans">
+                      {error}
+                    </p>
+                    <button
+                      onClick={() => setError('')}
+                      className="mt-2 text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 font-work-sans underline"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
