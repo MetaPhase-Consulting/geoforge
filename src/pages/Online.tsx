@@ -165,9 +165,11 @@ export default function Online() {
         <div className="space-y-8">
           {/* URL Input Section */}
           <div className="bg-white dark:bg-charcoal rounded-2xl p-8 border border-gold/20 dark:border-gold/30">
-            <h2 className="font-orbitron text-2xl font-bold text-charcoal dark:text-white mb-6">
-              Website Analysis
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-orbitron text-2xl font-bold text-charcoal dark:text-white">
+                Website Analysis
+              </h2>
+            </div>
             
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
@@ -309,9 +311,9 @@ export default function Online() {
                   </div>
                   
                   <div className="bg-white dark:bg-charcoal p-3 rounded-lg">
-                    <div className="text-charcoal/70 dark:text-silver">Accessibility Score</div>
-                    <div className={`font-semibold ${analysisResult.accessibility.score >= 80 ? 'text-green-600 dark:text-green-400' : analysisResult.accessibility.score >= 60 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {analysisResult.accessibility.score}/100
+                    <div className="text-charcoal/70 dark:text-silver text-sm">Content Length</div>
+                    <div className="font-semibold text-charcoal dark:text-white">
+                      {Math.round(analysisResult.technical.contentLength / 1024)}KB
                     </div>
                   </div>
                 </div>
@@ -322,24 +324,44 @@ export default function Online() {
                     <div className="font-semibold text-charcoal dark:text-white">{analysisResult.metadata.title}</div>
                   </div>
                 )}
+
+                {/* Existing Files Check */}
+                <div className="mt-4 grid md:grid-cols-2 gap-4">
+                  <div className="p-3 bg-white dark:bg-charcoal rounded-lg">
+                    <div className="text-charcoal/70 dark:text-silver text-sm">Robots.txt</div>
+                    <div className={`font-semibold ${analysisResult.technical.hasRobots ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                      {analysisResult.technical.hasRobots ? (
+                        <a href={analysisResult.existingFiles.robotsTxt.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                          Found - View File
+                        </a>
+                      ) : (
+                        'Not Found'
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 bg-white dark:bg-charcoal rounded-lg">
+                    <div className="text-charcoal/70 dark:text-silver text-sm">Sitemap.xml</div>
+                    <div className={`font-semibold ${analysisResult.technical.hasSitemap ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                      {analysisResult.technical.hasSitemap ? (
+                        <a href={analysisResult.existingFiles.sitemap.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                          Found - View File
+                        </a>
+                      ) : (
+                        'Not Found'
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
 
           {/* Configuration Section */}
           <div className="bg-white dark:bg-charcoal rounded-2xl p-8 border border-gold/20 dark:border-gold/30">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-orbitron text-2xl font-bold text-charcoal dark:text-white">
-                Configuration
-              </h2>
-              <button
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center space-x-2 text-gold hover:text-gold-light dark:hover:text-gold-light transition-colors font-work-sans"
-              >
-                <Settings className="w-5 h-5" />
-                <span>{showAdvanced ? 'Hide' : 'Show'} Advanced</span>
-              </button>
-            </div>
+            <h2 className="font-orbitron text-2xl font-bold text-charcoal dark:text-white mb-6">
+              Configuration
+            </h2>
 
             <div className="space-y-6">
               {/* LLM Configuration */}
@@ -353,7 +375,7 @@ export default function Online() {
                         id={llm.id}
                         checked={llm.enabled}
                         onChange={(e) => updateLLM(llm.id, e.target.checked)}
-                        className="mt-1 w-5 h-5 text-gold border-silver/30 dark:border-silver/40 rounded focus:ring-gold focus:ring-2 bg-white dark:bg-matte-bg"
+                        className="mt-1 w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2 checked:bg-gold checked:border-gold"
                       />
                       <div className="flex-1">
                         <label htmlFor={llm.id} className="block font-work-sans font-medium text-charcoal dark:text-white cursor-pointer">
@@ -376,7 +398,7 @@ export default function Online() {
                         type="checkbox"
                         checked={config.allowTraining}
                         onChange={(e) => setConfig(prev => ({ ...prev, allowTraining: e.target.checked }))}
-                        className="w-5 h-5 text-gold border-silver/30 dark:border-silver/40 rounded focus:ring-gold focus:ring-2 bg-white dark:bg-matte-bg"
+                        className="w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2 checked:bg-gold checked:border-gold"
                       />
                       <span className="font-work-sans text-charcoal dark:text-white">Allow AI training on content</span>
                     </label>
@@ -386,7 +408,7 @@ export default function Online() {
                         type="checkbox"
                         checked={config.includeHumans}
                         onChange={(e) => setConfig(prev => ({ ...prev, includeHumans: e.target.checked }))}
-                        className="w-5 h-5 text-gold border-silver/30 dark:border-silver/40 rounded focus:ring-gold focus:ring-2 bg-white dark:bg-matte-bg"
+                        className="w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2 checked:bg-gold checked:border-gold"
                       />
                       <span className="font-work-sans text-charcoal dark:text-white">Include humans.txt</span>
                     </label>
@@ -396,7 +418,7 @@ export default function Online() {
                         type="checkbox"
                         checked={config.includeSitemap}
                         onChange={(e) => setConfig(prev => ({ ...prev, includeSitemap: e.target.checked }))}
-                        className="w-5 h-5 text-gold border-silver/30 dark:border-silver/40 rounded focus:ring-gold focus:ring-2 bg-white dark:bg-matte-bg"
+                        className="w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2 checked:bg-gold checked:border-gold"
                       />
                       <span className="font-work-sans text-charcoal dark:text-white">Generate enhanced sitemap</span>
                     </label>
@@ -437,9 +459,20 @@ export default function Online() {
                 </div>
               </div>
 
+              {/* Advanced Settings Toggle */}
+              <div className="border-t border-silver/20 dark:border-silver/30 pt-6">
+                <button
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="flex items-center space-x-2 text-gold hover:text-gold-light dark:hover:text-gold-light transition-colors font-work-sans"
+                >
+                  <Settings className="w-5 h-5" />
+                  <span>{showAdvanced ? 'Hide' : 'Show'} Advanced Settings</span>
+                </button>
+              </div>
+
               {/* Advanced Options */}
               {showAdvanced && (
-                <div className="border-t border-silver/20 dark:border-silver/30 pt-6">
+                <div className="pt-4">
                   <h3 className="font-orbitron font-semibold text-charcoal dark:text-white mb-4">Advanced Settings</h3>
                   
                   <div className="grid md:grid-cols-2 gap-6">
@@ -455,7 +488,7 @@ export default function Online() {
                                 ...prev,
                                 includeAssets: { ...prev.includeAssets, [key]: e.target.checked }
                               }))}
-                              className="w-4 h-4 text-gold border-silver/30 dark:border-silver/40 rounded focus:ring-gold focus:ring-2 bg-white dark:bg-matte-bg"
+                              className="w-4 h-4 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2 checked:bg-gold checked:border-gold"
                             />
                             <span className="font-work-sans text-sm text-charcoal dark:text-white capitalize">{key}</span>
                           </label>

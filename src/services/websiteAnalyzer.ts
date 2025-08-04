@@ -72,6 +72,10 @@ interface AnalysisResult {
   };
   crawledPages: string[];
   errors: string[];
+  existingFiles: {
+    robotsTxt: { exists: boolean; url?: string; content?: string };
+    sitemap: { exists: boolean; url?: string; content?: string };
+  };
 }
 
 export class WebsiteAnalyzer {
@@ -133,7 +137,11 @@ export class WebsiteAnalyzer {
         other: []
       },
       crawledPages: [],
-      errors: []
+      errors: [],
+      existingFiles: {
+        robotsTxt: { exists: false },
+        sitemap: { exists: false }
+      }
     };
   }
 
@@ -151,20 +159,20 @@ export class WebsiteAnalyzer {
       onProgress?.(40, 'Checking technical aspects...');
       await this.analyzeTechnicalAspects();
 
+      onProgress?.(45, 'Checking existing files...');
+      await this.checkExistingFiles();
+
       onProgress?.(50, 'Analyzing SEO elements...');
       await this.analyzeSeoElements(mainPageContent);
 
       onProgress?.(60, 'Measuring performance...');
       await this.analyzePerformance();
 
-      onProgress?.(70, 'Checking accessibility...');
-      await this.analyzeAccessibility(mainPageContent);
-
-      onProgress?.(80, 'Discovering assets...');
+      onProgress?.(70, 'Discovering assets...');
       await this.discoverAssets(mainPageContent);
 
       if (this.config.auditMode === 'full' && this.config.maxDepth > 1) {
-        onProgress?.(90, 'Crawling additional pages...');
+        onProgress?.(80, 'Crawling additional pages...');
         await this.crawlAdditionalPages();
       }
 
@@ -276,19 +284,45 @@ export class WebsiteAnalyzer {
   private async analyzeTechnicalAspects(): Promise<void> {
     const url = new URL(this.config.url);
     this.results.technical.sslEnabled = url.protocol === 'https:';
+  }
+
+  private async checkExistingFiles(): Promise<void> {
+    const url = new URL(this.config.url);
 
     // Check for robots.txt
     try {
-      const robotsResponse = await fetch(`${url.origin}/robots.txt`);
-      this.results.technical.hasRobots = robotsResponse.ok;
+      const robotsUrl = `${url.origin}/robots.txt`;
+      const robotsResponse = await fetch(`/api/proxy?url=${encodeURIComponent(robotsUrl)}`);
+      if (robotsResponse.ok) {
+        const content = await robotsResponse.text();
+        this.results.technical.hasRobots = true;
+        this.results.existingFiles.robotsTxt = {
+          exists: true,
+          url: robotsUrl,
+          content: content
+        };
+      } else {
+        this.results.technical.hasRobots = false;
+      }
     } catch {
       this.results.technical.hasRobots = false;
     }
 
     // Check for sitemap
     try {
-      const sitemapResponse = await fetch(`${url.origin}/sitemap.xml`);
-      this.results.technical.hasSitemap = sitemapResponse.ok;
+      const sitemapUrl = `${url.origin}/sitemap.xml`;
+      const sitemapResponse = await fetch(`/api/proxy?url=${encodeURIComponent(sitemapUrl)}`);
+      if (sitemapResponse.ok) {
+        const content = await sitemapResponse.text();
+        this.results.technical.hasSitemap = true;
+        this.results.existingFiles.sitemap = {
+          exists: true,
+          url: sitemapUrl,
+          content: content
+        };
+      } else {
+        this.results.technical.hasSitemap = false;
+      }
     } catch {
       this.results.technical.hasSitemap = false;
     }
@@ -343,52 +377,6 @@ export class WebsiteAnalyzer {
       largestContentfulPaint: Math.random() * 3000 + 1000,
       cumulativeLayoutShift: Math.random() * 0.3,
       firstInputDelay: Math.random() * 200 + 50
-    };
-  }
-
-  private async analyzeAccessibility(content: string): Promise<void> {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
-    
-    const issues: { type: string; message: string; severity: 'error' | 'warning' | 'info' }[] = [];
-    let score = 100;
-
-    // Check for missing alt attributes
-    const imagesWithoutAlt = doc.querySelectorAll('img:not([alt])');
-    if (imagesWithoutAlt.length > 0) {
-      issues.push({
-        type: 'missing-alt',
-        message: `${imagesWithoutAlt.length} images missing alt attributes`,
-        severity: 'error'
-      });
-      score -= imagesWithoutAlt.length * 5;
-    }
-
-    // Check for heading structure
-    const headings = Array.from(doc.querySelectorAll('h1, h2, h3, h4, h5, h6'));
-    if (headings.length === 0) {
-      issues.push({
-        type: 'no-headings',
-        message: 'No heading elements found',
-        severity: 'warning'
-      });
-      score -= 10;
-    }
-
-    // Check for form labels
-    const inputsWithoutLabels = doc.querySelectorAll('input:not([aria-label]):not([aria-labelledby])');
-    if (inputsWithoutLabels.length > 0) {
-      issues.push({
-        type: 'missing-labels',
-        message: `${inputsWithoutLabels.length} form inputs missing labels`,
-        severity: 'error'
-      });
-      score -= inputsWithoutLabels.length * 3;
-    }
-
-    this.results.accessibility = {
-      score: Math.max(0, score),
-      issues
     };
   }
 
