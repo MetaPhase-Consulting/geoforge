@@ -13,21 +13,27 @@ export default function CLI() {
   const commands = [
     {
       id: 'install',
-      title: 'Install GEOforge',
-      command: 'npm install -g geoforge',
-      description: 'Install the CLI globally to use anywhere'
+      title: 'Install & Build',
+      command: 'git clone https://github.com/brianfunk/geoforge.git && cd geoforge && npm install && npm run build:cli',
+      description: 'Clone, install dependencies, and build the CLI'
     },
     {
-      id: 'init',
-      title: 'Initialize Project',
-      command: 'geoforge init --site "My Site" --domain https://mysite.com',
-      description: 'Create AI-ready files for your website'
+      id: 'basic',
+      title: 'Basic Analysis',
+      command: 'node dist/cli/index.js https://example.com',
+      description: 'Analyze a website and generate all AI optimization files'
     },
     {
-      id: 'audit',
-      title: 'Run Audit',
-      command: 'geoforge audit',
-      description: 'Check your site\'s AI optimization status'
+      id: 'selective',
+      title: 'Selective Generation',
+      command: 'node dist/cli/index.js https://example.com --no-humans --no-ai-txt --compression maximum',
+      description: 'Generate specific files with custom options'
+    },
+    {
+      id: 'training',
+      title: 'Allow AI Training',
+      command: 'node dist/cli/index.js https://example.com --allow-training',
+      description: 'Generate files that allow AI training on content'
     }
   ];
 
@@ -57,7 +63,7 @@ export default function CLI() {
             <div className="flex items-center justify-between mb-2">
               <span className="text-charcoal/60 dark:text-silver/80 font-work-sans text-sm">Terminal</span>
               <button
-                onClick={() => copyToClipboard('npm install -g geoforge', 'install')}
+                onClick={() => copyToClipboard('git clone https://github.com/brianfunk/geoforge.git && cd geoforge && npm install && npm run build:cli', 'install')}
                 className="flex items-center space-x-1 text-charcoal/60 dark:text-silver/80 hover:text-gold dark:hover:text-gold transition-colors"
               >
                 {copiedCommand === 'install' ? (
@@ -73,27 +79,27 @@ export default function CLI() {
                 )}
               </button>
             </div>
-            <code className="text-gold font-mono text-lg">npm install -g geoforge</code>
+            <code className="text-gold font-mono text-lg">git clone https://github.com/brianfunk/geoforge.git && cd geoforge && npm install && npm run build:cli</code>
           </div>
 
           <div className="flex items-center space-x-4">
             <a
-              href="https://www.npmjs.com/package/geoforge"
+              href="https://github.com/brianfunk/geoforge"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-2 text-gold hover:text-gold-light dark:hover:text-gold-light transition-colors font-work-sans"
             >
-              <Package className="w-5 h-5" />
-              <span>View on NPM</span>
+              <Github className="w-5 h-5" />
+              <span>View Source Code</span>
             </a>
             <a
-              href="https://github.com/geoforge/geoforge"
+              href="https://github.com/brianfunk/geoforge/blob/main/README.md"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-2 text-charcoal/70 dark:text-silver hover:text-gold dark:hover:text-gold transition-colors font-work-sans"
             >
-              <Github className="w-5 h-5" />
-              <span>Source Code</span>
+              <Download className="w-5 h-5" />
+              <span>Full Documentation</span>
             </a>
           </div>
         </div>
@@ -155,7 +161,7 @@ export default function CLI() {
                 </li>
                 <li className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-gold rounded-full"></div>
-                  <span>sitemap.xml & sitemap.json</span>
+                  <span>sitemap.xml with enhanced metadata</span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-gold rounded-full"></div>
@@ -163,29 +169,29 @@ export default function CLI() {
                 </li>
                 <li className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-gold rounded-full"></div>
-                  <span>llms.txt with AI directives</span>
+                  <span>geoforge.json with detailed analysis</span>
                 </li>
               </ul>
             </div>
             
             <div className="space-y-4">
-              <h3 className="font-orbitron font-semibold text-charcoal dark:text-white">Vendor Manifests</h3>
+              <h3 className="font-orbitron font-semibold text-charcoal dark:text-white">AI & Web Files</h3>
               <ul className="space-y-2 font-work-sans text-charcoal/70 dark:text-silver">
                 <li className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-gold rounded-full"></div>
-                  <span>openai.json for GPT models</span>
+                  <span>.well-known/ai.txt for AI guidelines</span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-gold rounded-full"></div>
-                  <span>claude.json for Anthropic</span>
+                  <span>.well-known/security.txt for security</span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-gold rounded-full"></div>
-                  <span>gemini.json for Google AI</span>
+                  <span>manifest.json for PWA support</span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-gold rounded-full"></div>
-                  <span>Custom vendor configs</span>
+                  <span>ads.txt & app-ads.txt for advertising</span>
                 </li>
               </ul>
             </div>

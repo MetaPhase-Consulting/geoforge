@@ -22,14 +22,17 @@
     "typeRoots": ["./node_modules/@types"]
   },
   "include": [
-    "src/cli/index.ts",
-    "src/config/**/*"
+    "src/cli/**/*",
+    "src/config/agents.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "src/cli/cliWebsiteAnalyzer.ts",
-    "src/cli/cliZipGenerator.ts",
-    "src/services/**/*"
+    "src/services/**/*",
+    "src/pages/**/*",
+    "src/components/**/*",
+    "src/App.tsx",
+    "src/main.tsx",
+    "src/cli/cliZipGenerator.ts"
   ]
 } 
