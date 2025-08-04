@@ -176,9 +176,6 @@ export default function Online() {
                   </span>
                 </div>
                 <p className="text-sm text-charcoal/70 dark:text-silver">{agent.description}</p>
-                <p className="text-xs text-charcoal/50 dark:text-silver/60 mt-1 font-mono">
-                  {agent.robots.join(', ')}
-                </p>
               </div>
             </div>
           );
