@@ -375,7 +375,8 @@ export default function Online() {
                         id={llm.id}
                         checked={llm.enabled}
                         onChange={(e) => updateLLM(llm.id, e.target.checked)}
-                        className="mt-1 w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2 checked:bg-gold checked:border-gold"
+                        className="mt-1 w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2"
+                        style={{ accentColor: '#FFD700' }}
                       />
                       <div className="flex-1">
                         <label htmlFor={llm.id} className="block font-work-sans font-medium text-charcoal dark:text-white cursor-pointer">
@@ -398,7 +399,8 @@ export default function Online() {
                         type="checkbox"
                         checked={config.allowTraining}
                         onChange={(e) => setConfig(prev => ({ ...prev, allowTraining: e.target.checked }))}
-                        className="w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2 checked:bg-gold checked:border-gold"
+                        className="w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2"
+                        style={{ accentColor: '#FFD700' }}
                       />
                       <span className="font-work-sans text-charcoal dark:text-white">Allow AI training on content</span>
                     </label>
@@ -408,7 +410,8 @@ export default function Online() {
                         type="checkbox"
                         checked={config.includeHumans}
                         onChange={(e) => setConfig(prev => ({ ...prev, includeHumans: e.target.checked }))}
-                        className="w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2 checked:bg-gold checked:border-gold"
+                        className="w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2"
+                        style={{ accentColor: '#FFD700' }}
                       />
                       <span className="font-work-sans text-charcoal dark:text-white">Include humans.txt</span>
                     </label>
@@ -418,7 +421,8 @@ export default function Online() {
                         type="checkbox"
                         checked={config.includeSitemap}
                         onChange={(e) => setConfig(prev => ({ ...prev, includeSitemap: e.target.checked }))}
-                        className="w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2 checked:bg-gold checked:border-gold"
+                        className="w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2"
+                        style={{ accentColor: '#FFD700' }}
                       />
                       <span className="font-work-sans text-charcoal dark:text-white">Generate enhanced sitemap</span>
                     </label>
@@ -488,7 +492,8 @@ export default function Online() {
                                 ...prev,
                                 includeAssets: { ...prev.includeAssets, [key]: e.target.checked }
                               }))}
-                              className="w-4 h-4 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2 checked:bg-gold checked:border-gold"
+                              className="w-4 h-4 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2"
+                              style={{ accentColor: '#FFD700' }}
                             />
                             <span className="font-work-sans text-sm text-charcoal dark:text-white capitalize">{key}</span>
                           </label>
