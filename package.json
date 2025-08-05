@@ -44,7 +44,7 @@
     "@types/jsdom": "^21.1.7",
     "commander": "^12.1.0",
     "file-saver": "^2.0.5",
-    "geoforge-cli": "^0.1.0",
+    "geoforge-cli": "^0.1.2",
     "jsdom": "^26.1.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.344.0",
