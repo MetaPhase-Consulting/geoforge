@@ -13,27 +13,33 @@ export default function CLI() {
   const commands = [
     {
       id: 'install',
-      title: 'Install & Build',
-      command: 'git clone https://github.com/brianfunk/geoforge.git && cd geoforge && npm install && npm run build:cli',
-      description: 'Clone, install dependencies, and build the CLI'
+      title: 'Install CLI',
+      command: 'npm install -g geoforge-cli',
+      description: 'Install GEOforge CLI globally via NPM'
     },
     {
       id: 'basic',
       title: 'Basic Analysis',
-      command: 'node dist/cli/index.js https://example.com',
+      command: 'geoforge https://example.com',
       description: 'Analyze a website and generate all AI optimization files'
     },
     {
       id: 'selective',
       title: 'Selective Generation',
-      command: 'node dist/cli/index.js https://example.com --no-humans --no-ai-txt --compression maximum',
+      command: 'geoforge https://example.com --no-humans --no-ai-txt --compression maximum',
       description: 'Generate specific files with custom options'
     },
     {
       id: 'training',
       title: 'Allow AI Training',
-      command: 'node dist/cli/index.js https://example.com --allow-training',
+      command: 'geoforge https://example.com --allow-training',
       description: 'Generate files that allow AI training on content'
+    },
+    {
+      id: 'custom-output',
+      title: 'Custom Output Directory',
+      command: 'geoforge https://example.com --output ./my-ai-files',
+      description: 'Specify a custom output directory for generated files'
     }
   ];
 
@@ -61,25 +67,25 @@ export default function CLI() {
 
           <div className="bg-matte-bg dark:bg-matte-bg rounded-lg p-6 mb-6 border border-gold/10 dark:border-gold/20">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-charcoal/60 dark:text-silver/80 font-work-sans text-sm">Terminal</span>
+              <span className="text-charcoal/60 dark:text-silver font-work-sans text-sm">Terminal</span>
               <button
-                onClick={() => copyToClipboard('git clone https://github.com/brianfunk/geoforge.git && cd geoforge && npm install && npm run build:cli', 'install')}
-                className="flex items-center space-x-1 text-charcoal/60 dark:text-silver/80 hover:text-gold dark:hover:text-gold transition-colors"
+                onClick={() => copyToClipboard('npm install -g geoforge-cli', 'install')}
+                className="flex items-center space-x-1 text-charcoal/60 dark:text-silver hover:text-gold dark:hover:text-gold transition-colors"
               >
                 {copiedCommand === 'install' ? (
                   <>
-                    <Check className="w-4 h-4" />
+                    <Check className="w-4 h-4 text-current" />
                     <span className="text-sm">Copied!</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="w-4 h-4" />
+                    <Copy className="w-4 h-4 text-current" />
                     <span className="text-sm">Copy</span>
                   </>
                 )}
               </button>
             </div>
-            <code className="text-gold font-mono text-lg">git clone https://github.com/brianfunk/geoforge.git && cd geoforge && npm install && npm run build:cli</code>
+            <code className="text-gold font-mono text-lg">npm install -g geoforge-cli</code>
           </div>
 
           <div className="flex items-center space-x-4">
@@ -93,13 +99,13 @@ export default function CLI() {
               <span>View Source Code</span>
             </a>
             <a
-              href="https://github.com/brianfunk/geoforge/blob/main/README.md"
+              href="https://www.npmjs.com/package/geoforge-cli"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-2 text-charcoal/70 dark:text-silver hover:text-gold dark:hover:text-gold transition-colors font-work-sans"
             >
               <Download className="w-5 h-5" />
-              <span>Full Documentation</span>
+              <span>NPM Package</span>
             </a>
           </div>
         </div>
@@ -128,12 +134,12 @@ export default function CLI() {
                   >
                     {copiedCommand === cmd.id ? (
                       <>
-                        <Check className="w-4 h-4" />
+                        <Check className="w-4 h-4 text-current" />
                         <span className="text-sm">Copied!</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="w-4 h-4" />
+                        <Copy className="w-4 h-4 text-current" />
                         <span className="text-sm">Copy</span>
                       </>
                     )}
@@ -143,6 +149,72 @@ export default function CLI() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Options */}
+        <div className="mt-12 bg-white dark:bg-charcoal rounded-2xl p-8 border border-gold/20 dark:border-gold/30">
+          <h2 className="font-orbitron text-2xl font-bold text-charcoal dark:text-white mb-6 text-center">
+            CLI Options
+          </h2>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm font-work-sans">
+              <thead>
+                <tr className="border-b border-gold/20 dark:border-gold/30">
+                  <th className="text-left py-3 px-4 text-charcoal dark:text-white font-semibold">Option</th>
+                  <th className="text-left py-3 px-4 text-charcoal dark:text-white font-semibold">Description</th>
+                  <th className="text-left py-3 px-4 text-charcoal dark:text-white font-semibold">Default</th>
+                </tr>
+              </thead>
+              <tbody className="text-charcoal/70 dark:text-silver">
+                <tr className="border-b border-gold/10 dark:border-gold/20">
+                  <td className="py-3 px-4 font-mono text-gold">--allow-training</td>
+                  <td className="py-3 px-4">Allow AI training on content</td>
+                  <td className="py-3 px-4">false</td>
+                </tr>
+                <tr className="border-b border-gold/10 dark:border-gold/20">
+                  <td className="py-3 px-4 font-mono text-gold">--no-humans</td>
+                  <td className="py-3 px-4">Skip humans.txt generation</td>
+                  <td className="py-3 px-4">true</td>
+                </tr>
+                <tr className="border-b border-gold/10 dark:border-gold/20">
+                  <td className="py-3 px-4 font-mono text-gold">--no-sitemap</td>
+                  <td className="py-3 px-4">Skip sitemap.xml generation</td>
+                  <td className="py-3 px-4">true</td>
+                </tr>
+                <tr className="border-b border-gold/10 dark:border-gold/20">
+                  <td className="py-3 px-4 font-mono text-gold">--no-ai-txt</td>
+                  <td className="py-3 px-4">Skip ai.txt generation</td>
+                  <td className="py-3 px-4">true</td>
+                </tr>
+                <tr className="border-b border-gold/10 dark:border-gold/20">
+                  <td className="py-3 px-4 font-mono text-gold">--no-security-txt</td>
+                  <td className="py-3 px-4">Skip security.txt generation</td>
+                  <td className="py-3 px-4">true</td>
+                </tr>
+                <tr className="border-b border-gold/10 dark:border-gold/20">
+                  <td className="py-3 px-4 font-mono text-gold">--no-manifest</td>
+                  <td className="py-3 px-4">Skip manifest.json generation</td>
+                  <td className="py-3 px-4">true</td>
+                </tr>
+                <tr className="border-b border-gold/10 dark:border-gold/20">
+                  <td className="py-3 px-4 font-mono text-gold">--no-ads</td>
+                  <td className="py-3 px-4">Skip ads.txt and app-ads.txt generation</td>
+                  <td className="py-3 px-4">true</td>
+                </tr>
+                <tr className="border-b border-gold/10 dark:border-gold/20">
+                  <td className="py-3 px-4 font-mono text-gold">--compression &lt;level&gt;</td>
+                  <td className="py-3 px-4">ZIP compression level (none, standard, maximum)</td>
+                  <td className="py-3 px-4">standard</td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-4 font-mono text-gold">--output &lt;dir&gt;</td>
+                  <td className="py-3 px-4">Output directory</td>
+                  <td className="py-3 px-4">geoforge-output</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Features */}
