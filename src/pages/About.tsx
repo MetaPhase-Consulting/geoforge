@@ -106,7 +106,7 @@ export default function About() {
             interact with the web.
           </p>
           <a
-            href="https://github.com/geoforge/geoforge"
+                            href="https://github.com/MetaPhase-Consulting/geoforge"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block bg-charcoal dark:bg-gold border-2 border-gold dark:border-charcoal text-gold dark:text-charcoal px-6 py-3 rounded-lg font-orbitron font-semibold transition-all duration-300 hover:bg-gold hover:text-charcoal dark:hover:bg-charcoal dark:hover:text-gold"

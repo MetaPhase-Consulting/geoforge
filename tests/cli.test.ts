@@ -196,7 +196,7 @@ Sitemap: https://metaphase.tech/sitemap.xml`;
     it('should generate humans.txt content', async () => {
       const humansContent = `/* TEAM */
 Developer: Brian Funk
-Contact: https://github.com/brianfunk
+Contact: https://github.com/MetaPhase-Consulting
 
 /* SITE */
 Last update: 2024

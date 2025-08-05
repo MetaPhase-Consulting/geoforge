@@ -80,8 +80,8 @@ Primary language: English (en-US)
 # Support
 For AI-related questions or issues:
 - Support: Available through our AI support form
-- Documentation: https://geoforge.dev/docs
-- GitHub: https://github.com/brianfunk/geoforge
+- Documentation: https://geoforge.dev/about
+- GitHub: https://github.com/MetaPhase-Consulting/geoforge
 
 # Version
 AI.txt version: 1.0

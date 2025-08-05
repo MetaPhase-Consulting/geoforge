@@ -414,7 +414,7 @@ Primary language: ${this.analysisResult.metadata?.language || 'English (en-US)'}
 For AI-related questions or issues:
 - Support: Available through our AI support form
 - Documentation: https://${domain}/docs
-- GitHub: https://github.com/brianfunk/geoforge
+- GitHub: https://github.com/MetaPhase-Consulting/geoforge
 
 # Version
 AI.txt version: 1.0
@@ -763,8 +763,8 @@ ${this.config.agents ? Object.entries(this.config.agents).filter(([_, enabled]) 
 
 For questions or issues with these files:
 - Visit: https://geoforge.dev
-- Documentation: https://docs.geoforge.dev
-- GitHub: https://github.com/brianfunk/geoforge
+- Documentation: https://geoforge.dev/about
+- GitHub: https://github.com/MetaPhase-Consulting/geoforge
 
 Generated on ${new Date().toLocaleString()} by GEOforge v1.0
 `;
@@ -870,8 +870,8 @@ curl ${this.config.url}/sitemap.xml
 
 If you encounter issues:
 1. Check the analysis report for specific recommendations
-2. Visit https://docs.geoforge.dev for detailed documentation
-3. Open an issue at https://github.com/brianfunk/geoforge
+2. Visit https://geoforge.dev/about for detailed documentation
+3. Open an issue at https://github.com/MetaPhase-Consulting/geoforge
 
 ---
 
