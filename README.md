@@ -88,27 +88,23 @@ The GEOforge CLI provides powerful command-line tools for website analysis and A
 
 #### Installation
 ```bash
-# Clone the repository
-git clone https://github.com/MetaPhase-Consulting/geoforge.git
-cd geoforge
+# Install the CLI package globally
+npm install -g geoforge-cli
 
-# Install dependencies
-npm install
-
-# Build the CLI
-npm run build:cli
+# Or use npx to run without installation
+npx geoforge-cli
 ```
 
 #### Basic Usage
 ```bash
 # Analyze a website and generate AI optimization files
-node dist/cli/index.js https://example.com
+geoforge https://example.com
 
 # Generate files with custom options
-node dist/cli/index.js https://example.com --allow-training --no-humans --compression maximum
+geoforge https://example.com --allow-training --no-humans --compression maximum
 
 # Specify output directory
-node dist/cli/index.js https://example.com --output ./my-ai-files
+geoforge https://example.com --output ./my-ai-files
 ```
 
 #### Command Line Options
@@ -130,22 +126,27 @@ node dist/cli/index.js https://example.com --output ./my-ai-files
 
 **Basic analysis with all files:**
 ```bash
-node dist/cli/index.js https://metaphase.tech
+geoforge https://metaphase.tech
 ```
 
 **Selective file generation:**
 ```bash
-node dist/cli/index.js https://farmers.gov --no-humans --no-ai-txt --compression maximum
+geoforge https://farmers.gov --no-humans --no-ai-txt --compression maximum
 ```
 
 **Allow AI training:**
 ```bash
-node dist/cli/index.js https://example.com --allow-training
+geoforge https://example.com --allow-training
 ```
 
 **Custom output directory:**
 ```bash
-node dist/cli/index.js https://example.com --output ./custom-output
+geoforge https://example.com --output ./custom-output
+```
+
+**Using npx without installation:**
+```bash
+npx geoforge-cli https://example.com
 ```
 
 #### Generated Files
@@ -181,6 +182,14 @@ The CLI generates a comprehensive set of AI optimization files:
    - `https://yourdomain.com/sitemap.xml`
    - `https://yourdomain.com/.well-known/ai.txt`
    - `https://yourdomain.com/.well-known/security.txt`
+
+#### Testing Your Deployment
+
+Use these commands to verify your deployment:
+- **Google Search Console** - Submit sitemap and monitor indexing
+- **Bing Webmaster Tools** - Verify robots.txt and sitemap
+- **Online robots.txt validators** - Test crawler directives
+- **Screaming Frog SEO Spider** - Comprehensive site audit
 
 #### Server Configuration
 
