@@ -175,7 +175,7 @@ export default function Online() {
     <div className="mb-8">
       <h3 className="font-orbitron font-semibold text-charcoal dark:text-white mb-2">{title}</h3>
       {description && (
-        <p className="text-sm text-charcoal/60 dark:text-silver/80 mb-4">{description}</p>
+        <p className="text-sm text-charcoal/60 dark:text-silver mb-4">{description}</p>
       )}
       <div className="grid md:grid-cols-2 gap-4">
         {agents.map((agent) => {
