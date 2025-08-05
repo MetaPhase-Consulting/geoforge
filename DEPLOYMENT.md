@@ -14,7 +14,7 @@ This guide covers deploying GEOforge to various platforms.
 ### Setup
 ```bash
 # Clone repository
-git clone https://github.com/brianfunk/geoforge.git
+git clone https://github.com/MetaPhase-Consulting/geoforge.git
 cd geoforge
 
 # Install dependencies

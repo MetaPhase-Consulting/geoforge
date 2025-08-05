@@ -1,5 +1,11 @@
 # GEOforge
 
+<div align="center">
+  <img src="public/favicon-32x32.png" alt="GEOforge Logo" width="32" height="32" />
+  <h1>GEOforge</h1>
+  <p><strong>Generative Engine Optimization for LLM Discovery</strong></p>
+</div>
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)](https://reactjs.org/)
@@ -9,45 +15,43 @@
 [![Accessibility](https://img.shields.io/badge/Accessibility-WCAG%202.1%20AA-green)](https://www.w3.org/WAI/WCAG21/quickref/)
 [![Security](https://img.shields.io/badge/Security-SOC%202-blue)](https://netlify.com/security)
 [![Open Source](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://www.drupaldata.dev/)
-[![CivicTech](https://img.shields.io/badge/Civic-Tech-1f7a8c)](https://github.com/brianfunk/geoforge)
+[![CivicTech](https://img.shields.io/badge/Civic-Tech-1f7a8c)](https://github.com/MetaPhase-Consulting/geoforge)
 [![LinkedIn](https://img.shields.io/badge/Linked-In-0077b5)](https://www.linkedin.com/company/metaphase-consulting-llc/)
 [![Built by MetaPhase](https://img.shields.io/badge/Built%20by-MetaPhase-fb641f)](https://metaphase.tech)
 
-**Generative Engine Optimization for LLM Discovery**
-
 GEOforge is an open-source tool that generates AI-ready optimization files for websites, including robots.txt, sitemaps, and vendor-specific AI manifests. Built for the modern web where AI crawlers and search engines need structured, accessible content.
 
-## 🎯 Project Purpose
+## Project Purpose
 
 GEOforge bridges the gap between traditional SEO and AI discovery by providing tools to optimize websites for both human users and AI systems. It generates standardized files that help AI crawlers understand your content while maintaining control over how your data is used for training.
 
-## ✨ Features
+## Features
 
-### 🤖 AI Crawler Management
+### AI Crawler Management
 - **Granular Control**: Specify which AI systems can access your content
 - **Vendor-Specific Rules**: Customize rules for different AI platforms
 - **Training vs. Search**: Distinguish between training crawlers and live search indexers
 - **Policy Tokens**: Implement special robots.txt tokens for AI training control
 
-### 📄 Vendor Manifests
+### Vendor Manifests
 - **Standardized JSON**: Generate manifests for major AI platforms
 - **Platform-Specific**: Tailored configurations for GPT, Claude, Perplexity, and more
 - **Automated Generation**: Create manifests from your existing site structure
 - **Version Control**: Track changes and updates to AI configurations
 
-### 🗺️ Enhanced Sitemaps
+### Enhanced Sitemaps
 - **XML & JSON Formats**: Support for both traditional and modern sitemap formats
 - **AI-Optimized**: Enhanced metadata for AI crawler understanding
 - **Automated Discovery**: Generate sitemaps from your existing content
 - **Real-time Updates**: Keep sitemaps current with your content
 
-### 🔧 Developer Tools
+### Developer Tools
 - **Web Interface**: User-friendly online tool for easy configuration
 - **CLI Support**: Command-line interface for developers and automation
 - **API Integration**: Programmatic access for custom workflows
 - **Bulk Operations**: Process multiple sites or domains efficiently
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - **Node.js** (v18 or higher)
@@ -61,7 +65,7 @@ Visit [geoforge.dev](https://geoforge.dev) to use the web interface.
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/brianfunk/geoforge.git
+   git clone https://github.com/MetaPhase-Consulting/geoforge.git
    cd geoforge
    ```
 
@@ -85,7 +89,7 @@ The GEOforge CLI provides powerful command-line tools for website analysis and A
 #### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/brianfunk/geoforge.git
+git clone https://github.com/MetaPhase-Consulting/geoforge.git
 cd geoforge
 
 # Install dependencies
@@ -216,7 +220,7 @@ Use these tools to verify your deployment:
 - Review the console output for specific error messages
 - Ensure your target website is publicly accessible
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 geoforge/
@@ -253,7 +257,7 @@ geoforge/
 └── tsconfig.json          # TypeScript configuration
 ```
 
-## 🤖 Supported AI Agents
+## Supported AI Agents
 
 | Label | Type | robots User-Agent | Description |
 |-------|------|-------------------|-------------|
@@ -269,7 +273,7 @@ geoforge/
 | Google-Extended | Policy token | Google-Extended | Google's AI training control |
 | Applebot-Extended | Policy token | Applebot-Extended | Apple's AI training control |
 
-## 📄 Generated Files
+## Generated Files
 
 ### Core Files
 - **`robots.txt`** - AI crawler directives and policies
@@ -297,7 +301,7 @@ geoforge/
 - **Selective Generation** - Choose which files to include
 - **Compression Options** - Multiple ZIP compression levels
 
-## 🛠️ Development
+## Development
 
 ### Available Scripts
 
@@ -321,7 +325,7 @@ This project uses:
 - **Prettier** for code formatting (recommended)
 - **Accessibility** testing with built-in WCAG compliance
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
@@ -335,7 +339,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
 
-## 🔒 Security
+## Security
 
 Security is important to us. Please review our [Security Policy](SECURITY.md) for information on reporting vulnerabilities.
 
@@ -345,11 +349,11 @@ Key security features:
 - CSP headers for additional protection
 - Regular dependency updates
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **OpenAI** - For pioneering AI training and search
 - **Anthropic** - For Claude and responsible AI development
@@ -358,7 +362,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Tailwind CSS** - Utility-first CSS framework
 - **Vite** - Fast build tool and dev server
 
-## 📞 Support
+## Support
 
 - **Documentation**: Check our [Wiki](../../wiki) for detailed guides
 - **Issues**: Report bugs or request features via [GitHub Issues](../../issues)
@@ -368,4 +372,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤️ for the AI-first web**
 
-[Website](https://geoforge.dev) • [Issues](../../issues) • [Contributing](CONTRIBUTING.md) • [Changelog](CHANGELOG.md)
+[Website](https://geoforge.dev) • [Issues](https://github.com/MetaPhase-Consulting/geoforge/issues) • [Contributing](CONTRIBUTING.md) • [Changelog](CHANGELOG.md)

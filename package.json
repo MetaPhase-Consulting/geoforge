@@ -18,11 +18,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/brianfunk/geoforge.git"
+    "url": "https://github.com/MetaPhase-Consulting/geoforge.git"
   },
   "homepage": "https://geoforge.dev",
   "bugs": {
-    "url": "https://github.com/brianfunk/geoforge/issues"
+    "url": "https://github.com/MetaPhase-Consulting/geoforge/issues"
   },
   "type": "module",
   "bin": {

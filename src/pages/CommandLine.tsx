@@ -90,7 +90,7 @@ export default function CLI() {
 
           <div className="flex items-center space-x-4">
             <a
-              href="https://github.com/brianfunk/geoforge"
+                              href="https://github.com/MetaPhase-Consulting/geoforge"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-2 text-gold hover:text-gold-light dark:hover:text-gold-light transition-colors font-work-sans"
