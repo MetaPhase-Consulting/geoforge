@@ -363,18 +363,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Documentation**: Check our [Wiki](../../wiki) for detailed guides
 - **Issues**: Report bugs or request features via [GitHub Issues](../../issues)
 - **Discussions**: Join conversations in [GitHub Discussions](../../discussions)
-- **Contact**: For private inquiries, use our contact form
-
-## 🗺️ Roadmap
-
-- [ ] Add support for more AI platforms (Cohere, AI21, etc.)
-- [ ] Implement real-time AI crawler monitoring
-- [ ] Add collaboration features for teams
-- [ ] Create VS Code extension
-- [ ] Add API for programmatic access
-- [ ] Mobile app for on-the-go configuration
-- [ ] Integration with popular CMS platforms
-- [ ] Advanced analytics and reporting
 
 ---
 

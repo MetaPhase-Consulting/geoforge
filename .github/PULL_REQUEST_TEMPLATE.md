@@ -1,62 +1,43 @@
-## Pull Request Description
+## Description
 
-**Type of Change:**
-- [ ] Bug fix
-- [ ] New feature
+Briefly describe the changes in this pull request.
+
+## Type of Change
+
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] Documentation update
-- [ ] Refactoring
 - [ ] Performance improvement
-- [ ] Other
+- [ ] Code refactoring
+- [ ] Dependency update
+- [ ] Other: ___________
 
-**Related Issue:**
-Closes #[issue number]
+## Related Issues
 
-## Summary
-
-Brief description of the changes made.
+Fixes #(issue number)
+Closes #(issue number)
+Resolves #(issue number)
 
 ## Changes Made
 
-- [ ] Feature A: Description
-- [ ] Feature B: Description
-- [ ] Bug fix: Description
-- [ ] Documentation: Description
-
-## Testing
-
-- [ ] Unit tests pass
-- [ ] Integration tests pass
-- [ ] Manual testing completed
-- [ ] Cross-browser testing completed
-- [ ] Accessibility testing completed
+- Change 1
+- Change 2
+- Change 3
 
 ## Screenshots (if applicable)
 
-[Add screenshots here]
+If your changes affect the UI, please include before/after screenshots.
 
-## Checklist
+## Testing
 
-- [ ] Code follows project style guidelines
-- [ ] Self-review completed
-- [ ] Code is self-documenting
-- [ ] No console errors
-- [ ] No linting errors
-- [ ] Documentation updated
-- [ ] Tests added/updated
-- [ ] Commit messages are clear and descriptive
+- [ ] Tested in Chrome
+- [ ] Tested in Firefox
+- [ ] Tested in Safari
+- [ ] Tested on mobile devices
+- [ ] `npm run lint` passes
+- [ ] `npm run build` completes successfully
 
 ## Additional Notes
 
-Any additional information or context for reviewers.
-
-## Breaking Changes
-
-- [ ] This PR includes breaking changes
-- [ ] Breaking changes are documented
-- [ ] Migration guide provided (if applicable)
-
-## Dependencies
-
-- [ ] No new dependencies added
-- [ ] New dependencies are necessary and documented
-- [ ] Dependencies are up to date 
+Add any additional notes, concerns, or context here. 

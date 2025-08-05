@@ -7,11 +7,6 @@
 - [ ] Security vulnerability
 - [ ] Other
 
-**Priority:**
-- [ ] High
-- [ ] Medium
-- [ ] Low
-
 ## Summary
 
 Brief description of the issue or feature request.
@@ -42,16 +37,4 @@ What actually happened.
 
 - Screenshots (if applicable)
 - Console errors (if applicable)
-- Network tab information (if applicable)
-
-## Checklist
-
-- [ ] I have searched existing issues
-- [ ] I have provided all requested information
-- [ ] I have tested on multiple browsers/devices
-- [ ] I have included relevant error messages
-
-## Contact Information
-
-- **Email**: [optional]
-- **GitHub**: [your username] 
+- Network tab information (if applicable) 
