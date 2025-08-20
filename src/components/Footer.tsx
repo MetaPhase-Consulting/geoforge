@@ -21,7 +21,7 @@ export default function Footer() {
             <div className="flex items-center space-x-4 text-charcoal/70 dark:text-silver font-work-sans text-sm">
               <div className="flex items-center space-x-2">
                 <Github className="w-4 h-4" />
-                <a href="https://github.com/brianfunk/geoforge" target="_blank" rel="noopener noreferrer" className="hover:text-gold transition-colors">Open Source</a>
+                <a href="https://github.com/MetaPhase-Consulting/geoforge" target="_blank" rel="noopener noreferrer" className="hover:text-gold transition-colors">Open Source</a>
               </div>
               <span className="text-charcoal/70 dark:text-silver">|</span>
               <span className="text-charcoal/70 dark:text-silver">

@@ -207,9 +207,9 @@ it('should execute CLI command', async () => {
 npm run build:cli
 
 # Test CLI manually
-node dist/cli/index.js --help
-node dist/cli/index.js https://metaphase.tech
-node dist/cli/index.js https://farmers.gov --no-humans
+geoforge --help
+geoforge https://metaphase.tech
+geoforge https://farmers.gov --no-humans
 
 # Run specific test file
 npm test tests/cli.test.ts

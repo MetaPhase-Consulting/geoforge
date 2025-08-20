@@ -87,7 +87,7 @@ Primary language: ${analysis.metadata.language || 'English (en-US)'}
 For AI-related questions or issues:
 - Support: Available through our AI support form
 - Documentation: https://${domain}/docs
-- GitHub: https://github.com/brianfunk/geoforge
+- GitHub: https://github.com/MetaPhase-Consulting/geoforge
 
 # Version
 AI.txt version: 1.0
