@@ -1,5 +1,5 @@
 import React from 'react';
-import { Copy, Check, Download, Terminal } from 'lucide-react';
+import { Download, Terminal } from 'lucide-react';
 
 export default function CodeExample() {
   return (

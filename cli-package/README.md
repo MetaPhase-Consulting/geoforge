@@ -1,6 +1,6 @@
 # GEOforge CLI
 
-Generate AI-ready optimization files for websites, including robots.txt, sitemaps, and AI manifests.
+Generate AI-ready website files for crawler/discovery control.
 
 ## Installation
 
@@ -11,59 +11,50 @@ npm install -g geoforge-cli
 ## Usage
 
 ```bash
-# Basic usage
 geoforge https://example.com
-
-# With options
-geoforge https://example.com --allow-training --no-humans --compression maximum
-
-# Custom output directory
+geoforge https://example.com --profile strict-privacy
+geoforge https://example.com --json-summary
 geoforge https://example.com --output ./my-ai-files
 ```
 
 ## Options
 
 | Option | Description | Default |
-|--------|-------------|---------|
+|---|---|---|
 | `--allow-training` | Allow AI training on content | `false` |
-| `--no-humans` | Skip humans.txt generation | `true` |
-| `--no-sitemap` | Skip sitemap.xml generation | `true` |
-| `--no-ai-txt` | Skip ai.txt generation | `true` |
-| `--no-security-txt` | Skip security.txt generation | `true` |
-| `--no-manifest` | Skip manifest.json generation | `true` |
-| `--no-ads` | Skip ads.txt and app-ads.txt generation | `true` |
-| `--compression <level>` | ZIP compression level (none, standard, maximum) | `standard` |
+| `--profile <profile>` | `strict-privacy`, `balanced`, `open-discovery` | `balanced` |
+| `--json-summary` | Print machine-readable JSON summary to stdout | `false` |
+| `--verbose` | Enable debug logging | `false` |
+| `--no-humans` | Skip `humans.txt` | `true` |
+| `--no-sitemap` | Skip `sitemap.xml` | `true` |
+| `--no-ai-txt` | Skip `.well-known/ai.txt` | `true` |
+| `--no-security-txt` | Skip `.well-known/security.txt` | `true` |
+| `--no-manifest` | Skip `manifest.json` and `browserconfig.xml` | `true` |
+| `--no-ads` | Skip `ads.txt` and `app-ads.txt` | `true` |
+| `--compression <level>` | `none`, `standard`, `maximum` | `standard` |
 | `--output <dir>` | Output directory | `geoforge-output` |
 
-## Generated Files
+## Outputs
 
-- `robots.txt` - AI crawler directives and policies
-- `sitemap.xml` - Enhanced XML sitemap with AI metadata
-- `humans.txt` - Human-readable site information
-- `.well-known/ai.txt` - AI interaction guidelines
-- `.well-known/security.txt` - Security contact information
-- `manifest.json` - Progressive Web App manifest
-- `browserconfig.xml` - Microsoft tile configuration
-- `ads.txt` - Authorized digital sellers
-- `app-ads.txt` - Mobile app advertising
-- `geoforge.json` - Detailed website analysis report
+- `robots.txt`
+- `sitemap.xml` (optional)
+- `humans.txt` (optional)
+- `.well-known/ai.txt` (optional)
+- `.well-known/security.txt` (optional)
+- `manifest.json` + `browserconfig.xml` (optional)
+- `ads.txt` + `app-ads.txt` (optional)
+- `geoforge.json`
 
-## Examples
+## Local Package Build
 
-**Basic analysis:**
+From `cli-package/`:
+
 ```bash
-geoforge https://metaphase.tech
+npm install
+npm run build
 ```
 
-**Selective file generation:**
-```bash
-geoforge https://farmers.gov --no-humans --no-ai-txt --compression maximum
-```
-
-**Allow AI training:**
-```bash
-geoforge https://example.com --allow-training
-```
+`npm run build` syncs CLI sources from repo root before compilation.
 
 ## License
 

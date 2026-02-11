@@ -31,13 +31,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && npm run build:cli",
-    "build:cli": "tsc --project tsconfig.cli.json",
+    "build:cli": "npm run sync:cli-package && tsc --project tsconfig.cli.json",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run",
+    "test:run": "npm run build:cli && vitest run",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "sync:cli-package": "./scripts/sync-cli-package.sh"
   },
   "dependencies": {
     "@types/file-saver": "^2.0.7",
@@ -50,7 +51,7 @@
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.7.1"
+    "react-router-dom": "^7.12.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
@@ -68,8 +69,8 @@
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.5.3",
-    "typescript-eslint": "^8.3.0",
-    "vite": "^7.1.5",
+    "typescript-eslint": "^8.46.0",
+    "vite": "^7.1.12",
     "vitest": "^3.2.4"
   }
 }

@@ -1,23 +1,59 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Globe, Download, CheckCircle, AlertCircle, Loader2, Settings, FileText, Zap, X } from 'lucide-react';
 import { WebsiteAnalyzer, type AnalysisConfig, type AnalysisResult } from '../services/websiteAnalyzer';
 import { ZipGenerator } from '../services/zipGenerator';
-import { AGENTS, getAgentsByType, getTypeBadge, type Agent, type AgentType } from '../config/agents';
+import { AGENTS, getAgentsByType, getTypeBadge, type Agent } from '../config/agents';
+import type { GeneratedArtifact, GenerationProfile } from '../shared/types';
 
-// Create default agent choices from AGENTS configuration
 const createDefaultAgentChoices = (): Record<string, boolean> => {
   const choices: Record<string, boolean> = {};
-  AGENTS.forEach(agent => {
+  AGENTS.forEach((agent) => {
     choices[agent.id] = agent.defaultEnabled;
   });
   return choices;
 };
+
+const PROFILE_OPTIONS: { value: GenerationProfile; label: string; description: string }[] = [
+  { value: 'strict-privacy', label: 'Strict Privacy', description: 'Blocks training and policy-token agents by default.' },
+  { value: 'balanced', label: 'Balanced', description: 'Default mix of crawl controls for most sites.' },
+  { value: 'open-discovery', label: 'Open Discovery', description: 'Allows broad indexing/training where possible.' }
+];
+
+const PREVIEW_FILES = ['robots.txt', 'sitemap.xml', '.well-known/ai.txt', '.well-known/security.txt'] as const;
+
+function applyProfile(profile: GenerationProfile, currentAgents: Record<string, boolean>) {
+  if (profile === 'strict-privacy') {
+    return {
+      allowTraining: false,
+      agents: Object.keys(currentAgents).reduce((acc, key) => {
+        acc[key] = false;
+        return acc;
+      }, {} as Record<string, boolean>)
+    };
+  }
+
+  if (profile === 'open-discovery') {
+    return {
+      allowTraining: true,
+      agents: Object.keys(currentAgents).reduce((acc, key) => {
+        acc[key] = true;
+        return acc;
+      }, {} as Record<string, boolean>)
+    };
+  }
+
+  return {
+    allowTraining: false,
+    agents: createDefaultAgentChoices()
+  };
+}
 
 export default function Online() {
   const [config, setConfig] = useState<AnalysisConfig>({
     url: '',
     siteName: '',
     allowTraining: false,
+    profile: 'balanced',
     agents: createDefaultAgentChoices(),
     includeHumans: true,
     includeSitemap: true,
@@ -34,38 +70,45 @@ export default function Online() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState('');
   const [analysisProgress, setAnalysisProgress] = useState({ progress: 0, status: '' });
   const [generationProgress, setGenerationProgress] = useState({ progress: 0, status: '' });
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [analyzer, setAnalyzer] = useState<WebsiteAnalyzer | null>(null);
   const [originalUrl, setOriginalUrl] = useState('');
+  const [siteNameTouched, setSiteNameTouched] = useState(false);
+  const [selectedPreview, setSelectedPreview] = useState<string>('robots.txt');
+  const [selectedDownloads, setSelectedDownloads] = useState<Record<string, boolean>>({});
 
   const formatUrl = (url: string): string => {
     const trimmedUrl = url.trim();
     if (!trimmedUrl) return '';
-    
-    // Check if URL already has protocol
-    if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
-      return trimmedUrl;
-    }
-    
-    // Default to HTTPS for security
+    if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) return trimmedUrl;
     return `https://${trimmedUrl}`;
   };
 
   const handleUrlChange = (inputUrl: string) => {
     setOriginalUrl(inputUrl);
     const formattedUrl = formatUrl(inputUrl);
-    setConfig(prev => ({ ...prev, url: formattedUrl }));
+    setConfig((prev) => ({ ...prev, url: formattedUrl }));
   };
+
+  const handleProfileChange = (profile: GenerationProfile) => {
+    const profileResult = applyProfile(profile, config.agents);
+    setConfig((prev) => ({
+      ...prev,
+      profile,
+      allowTraining: profileResult.allowTraining,
+      agents: profileResult.agents
+    }));
+  };
+
   const handleAnalyze = async () => {
     if (!config.url) {
       setError('Please enter a valid URL');
       return;
     }
 
-    // Validate URL format
     try {
       new URL(config.url);
     } catch {
@@ -85,18 +128,13 @@ export default function Online() {
       const result = await websiteAnalyzer.analyze((progress, status) => {
         setAnalysisProgress({ progress, status });
       });
-      
+
       setAnalysisResult(result);
-      
-      // Always override site name with page title
-      if (result.metadata.title) {
-        const cleanTitle = result.metadata.title.replace(/\s*\|\s*.*$/, '').trim(); // Remove " | Site Name" suffixes
-        console.log('📝 Setting site name from page title:', cleanTitle);
-        setConfig(prev => ({ ...prev, siteName: cleanTitle }));
-      } else {
-        console.log('⚠️ No page title found, keeping existing site name');
+
+      if (!siteNameTouched && result.metadata.title) {
+        const cleanTitle = result.metadata.title.replace(/\s*\|\s*.*$/, '').trim();
+        setConfig((prev) => ({ ...prev, siteName: cleanTitle }));
       }
-      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Analysis failed. Please check the URL and try again.';
       setError(errorMessage);
@@ -106,15 +144,28 @@ export default function Online() {
     }
   };
 
-  const handleGenerate = async () => {
-    console.log('🚀 Starting ZIP generation...');
-    console.log('📋 Config:', config);
-    console.log('📊 Analysis Result:', analysisResult);
-    
-    if (!analysisResult) {
-      const errorMsg = 'Please analyze your website first';
-      console.error('❌ No analysis result available:', errorMsg);
-      setError(errorMsg);
+  const generator = useMemo(() => {
+    if (!analysisResult) return null;
+    return new ZipGenerator(config, analysisResult);
+  }, [analysisResult, config]);
+
+  const artifacts = useMemo<GeneratedArtifact[]>(() => {
+    if (!generator) return [];
+    return generator.getArtifacts();
+  }, [generator]);
+
+  const previewArtifact = useMemo(() => artifacts.find((item) => item.name === selectedPreview), [artifacts, selectedPreview]);
+
+  const existingContent = useMemo(() => {
+    if (!analysisResult) return '';
+    if (selectedPreview === 'robots.txt') return analysisResult.existingFiles.robotsTxt.content || '';
+    if (selectedPreview === 'sitemap.xml') return analysisResult.existingFiles.sitemap.content || '';
+    return '';
+  }, [analysisResult, selectedPreview]);
+
+  const handleGenerateZip = async () => {
+    if (!generator) {
+      setError('Please analyze your website first');
       return;
     }
 
@@ -123,65 +174,65 @@ export default function Online() {
     setGenerationProgress({ progress: 0, status: 'Preparing files...' });
 
     try {
-      console.log('📦 Creating ZipGenerator instance...');
-      const zipGenerator = new ZipGenerator(config, analysisResult);
-      
-      console.log('⚙️ Starting generateAndDownload...');
-      await zipGenerator.generateAndDownload((progress, status) => {
-        console.log(`📈 Progress: ${progress}% - ${status}`);
+      await generator.generateAndDownload((progress, status) => {
         setGenerationProgress({ progress, status });
       });
-      
-      console.log('✅ ZIP generation completed successfully!');
     } catch (err) {
-      console.error('💥 ZIP generation failed:', err);
-      console.error('🔍 Error details:', {
-        name: err instanceof Error ? err.name : 'Unknown',
-        message: err instanceof Error ? err.message : 'Unknown error',
-        stack: err instanceof Error ? err.stack : 'No stack trace'
-      });
-      
-      const errorMessage = err instanceof Error ? err.message : 'Failed to generate files. Please try again.';
-      console.error('📝 Setting error message:', errorMessage);
-      setError(errorMessage);
+      setError(err instanceof Error ? err.message : 'Failed to generate files. Please try again.');
     } finally {
-      console.log('🏁 ZIP generation process finished');
       setIsGenerating(false);
     }
   };
 
-  const handleCancel = () => {
-    if (analyzer) {
-      analyzer.abort();
-      setIsAnalyzing(false);
-      setAnalyzer(null);
+  const handleSingleDownload = async (fileName: string) => {
+    if (!generator) return;
+
+    try {
+      await generator.downloadSingleFile(fileName);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to download file.');
     }
   };
 
+  const handleDownloadSelected = async () => {
+    if (!generator) return;
+    const fileNames = Object.entries(selectedDownloads)
+      .filter(([, enabled]) => enabled)
+      .map(([name]) => name);
+
+    try {
+      await generator.downloadSelectedFiles(fileNames);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to download selected files.');
+    }
+  };
+
+  const handleCancel = () => {
+    if (!analyzer) return;
+    analyzer.abort();
+    setIsAnalyzing(false);
+    setAnalyzer(null);
+  };
+
   const updateAgent = (id: string, enabled: boolean) => {
-    setConfig(prev => ({
+    setConfig((prev) => ({
       ...prev,
       agents: { ...prev.agents, [id]: enabled }
     }));
   };
 
-  const getAnalysisStatusColor = (status: string) => {
-    if (status === 'success') return 'text-green-600 dark:text-green-400';
-    if (status === 'error') return 'text-red-600 dark:text-red-400';
-    return 'text-charcoal dark:text-white';
-  };
-
   const renderAgentSection = (title: string, agents: Agent[], description?: string) => (
     <div className="mb-8">
       <h3 className="font-orbitron font-semibold text-charcoal dark:text-white mb-2">{title}</h3>
-      {description && (
-        <p className="text-sm text-charcoal/60 dark:text-silver mb-4">{description}</p>
-      )}
+      {description && <p className="text-sm text-charcoal/60 dark:text-silver mb-4">{description}</p>}
       <div className="grid md:grid-cols-2 gap-4">
         {agents.map((agent) => {
           const badge = getTypeBadge(agent.type);
           return (
-            <div key={agent.id} className="flex items-start space-x-3 p-4 border border-silver/20 dark:border-silver/30 rounded-lg bg-white dark:bg-matte-bg">
+            <div
+              key={agent.id}
+              className="flex items-start space-x-3 p-4 border border-silver/20 dark:border-silver/30 rounded-lg bg-white dark:bg-matte-bg"
+            >
               <input
                 type="checkbox"
                 id={agent.id}
@@ -195,9 +246,7 @@ export default function Online() {
                   <label htmlFor={agent.id} className="block font-work-sans font-medium text-charcoal dark:text-white cursor-pointer">
                     {agent.label}
                   </label>
-                  <span className={`px-2 py-1 text-xs font-mono font-bold rounded ${badge.color}`}>
-                    {badge.label}
-                  </span>
+                  <span className={`px-2 py-1 text-xs font-mono font-bold rounded ${badge.color}`}>{badge.label}</span>
                 </div>
                 <p className="text-sm text-charcoal/70 dark:text-silver">{agent.description}</p>
               </div>
@@ -216,68 +265,73 @@ export default function Online() {
             <Download className="w-12 h-12 text-gold" />
             <span className="shimmer-text">Online Tool</span>
           </h1>
-          <p className="text-xl text-charcoal/70 dark:text-silver font-work-sans">
-            Analyze your website and forge AI-ready optimization files
-          </p>
+          <p className="text-xl text-charcoal/70 dark:text-silver font-work-sans">Analyze your website and forge AI-ready optimization files</p>
         </div>
 
         <div className="space-y-8">
-          {/* URL Input Section */}
           <div className="bg-white dark:bg-charcoal rounded-2xl p-8 border border-gold/20 dark:border-gold/30">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-orbitron text-2xl font-bold text-charcoal dark:text-white">
-                Website Analysis
-              </h2>
-            </div>
-            
+            <h2 className="font-orbitron text-2xl font-bold text-charcoal dark:text-white mb-6">Website Analysis</h2>
+
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-work-sans font-medium text-charcoal dark:text-white mb-2">
+                  <label htmlFor="website-url" className="block text-sm font-work-sans font-medium text-charcoal dark:text-white mb-2">
                     Website URL *
                   </label>
                   <div className="relative">
                     <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-silver dark:text-silver" />
                     <input
+                      id="website-url"
                       type="url"
                       value={config.url}
                       onChange={(e) => handleUrlChange(e.target.value)}
                       placeholder="https://example.com"
-                      className="w-full pl-12 pr-4 py-3 border border-silver/30 dark:border-silver/40 rounded-lg bg-white dark:bg-matte-bg text-charcoal dark:text-white font-work-sans focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition-colors placeholder:text-charcoal/50 dark:placeholder:text-silver/60"
+                      className="w-full pl-12 pr-4 py-3 border border-silver/30 dark:border-silver/40 rounded-lg bg-white dark:bg-matte-bg text-charcoal dark:text-white"
                       disabled={isAnalyzing}
                     />
                   </div>
-                  
-                  {/* URL Format Indicator */}
                   {originalUrl && originalUrl !== config.url && (
-                    <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
-                      <div className="text-sm font-work-sans">
-                        <div className="text-blue-700 dark:text-blue-200">
-                          <span className="font-medium">Original:</span> {originalUrl}
-                        </div>
-                        <div className="text-blue-700 dark:text-blue-200">
-                          <span className="font-medium">Updated:</span> {config.url}
-                        </div>
-                        <div className="text-blue-600 dark:text-blue-300 text-xs mt-1">
-                          ✓ Added HTTPS protocol for security
-                        </div>
-                      </div>
+                    <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg text-xs text-blue-700 dark:text-blue-200">
+                      Added HTTPS protocol for security: <code>{config.url}</code>
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-work-sans font-medium text-charcoal dark:text-white mb-2">
+                  <label htmlFor="site-name" className="block text-sm font-work-sans font-medium text-charcoal dark:text-white mb-2">
                     Site Name
                   </label>
                   <input
+                    id="site-name"
                     type="text"
                     value={config.siteName}
-                    onChange={(e) => setConfig(prev => ({ ...prev, siteName: e.target.value }))}
+                    onChange={(e) => {
+                      setSiteNameTouched(true);
+                      setConfig((prev) => ({ ...prev, siteName: e.target.value }));
+                    }}
                     placeholder="My Awesome Website"
-                    className="w-full px-4 py-3 border border-silver/30 dark:border-silver/40 rounded-lg bg-white dark:bg-matte-bg text-charcoal dark:text-white font-work-sans focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition-colors placeholder:text-charcoal/50 dark:placeholder:text-silver/60"
+                    className="w-full px-4 py-3 border border-silver/30 dark:border-silver/40 rounded-lg bg-white dark:bg-matte-bg text-charcoal dark:text-white"
                     disabled={isAnalyzing}
                   />
+                </div>
+              </div>
+
+              <div>
+                <p className="block text-sm font-work-sans font-medium text-charcoal dark:text-white mb-2">Generation Profile</p>
+                <div className="grid md:grid-cols-3 gap-3">
+                  {PROFILE_OPTIONS.map((profile) => (
+                    <button
+                      key={profile.value}
+                      type="button"
+                      onClick={() => handleProfileChange(profile.value)}
+                      id={`generation-profile-${profile.value}`}
+                      aria-pressed={config.profile === profile.value}
+                      className={`text-left p-3 rounded-lg border ${config.profile === profile.value ? 'border-gold bg-gold/10' : 'border-silver/30'}`}
+                    >
+                      <div className="font-semibold text-charcoal dark:text-white">{profile.label}</div>
+                      <div className="text-xs text-charcoal/70 dark:text-silver">{profile.description}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -285,7 +339,7 @@ export default function Online() {
                 <button
                   onClick={handleAnalyze}
                   disabled={isAnalyzing || !config.url}
-                  className="px-8 py-3 bg-gold text-charcoal dark:text-charcoal font-orbitron font-semibold rounded-lg hover:bg-gold-light dark:hover:bg-gold-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  className="px-8 py-3 bg-gold text-charcoal font-orbitron font-semibold rounded-lg disabled:opacity-50 flex items-center space-x-2"
                 >
                   {isAnalyzing ? (
                     <>
@@ -301,117 +355,56 @@ export default function Online() {
                 </button>
 
                 {isAnalyzing && (
-                  <button
-                    onClick={handleCancel}
-                    className="px-4 py-3 bg-red-600 text-white font-work-sans font-medium rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
-                  >
+                  <button onClick={handleCancel} className="px-4 py-3 bg-red-600 text-white rounded-lg flex items-center space-x-2">
                     <X className="w-4 h-4" />
                     <span>Cancel</span>
                   </button>
                 )}
               </div>
 
-              {/* Analysis Progress */}
               {isAnalyzing && (
-                <div className="mt-4 p-4 bg-gold/10 dark:bg-gold/20 border border-gold/30 dark:border-gold/40 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-work-sans text-sm text-charcoal dark:text-white">
-                      {analysisProgress.status}
-                    </span>
-                    <span className="font-work-sans text-sm text-charcoal dark:text-white">
-                      {analysisProgress.progress}%
-                    </span>
+                <div aria-live="polite" className="mt-4 p-4 bg-gold/10 border border-gold/30 rounded-lg">
+                  <div className="flex items-center justify-between mb-2 text-sm">
+                    <span>{analysisProgress.status}</span>
+                    <span>{analysisProgress.progress}%</span>
                   </div>
-                  <div className="w-full bg-silver/20 dark:bg-silver/30 rounded-full h-2">
-                    <div 
-                      className="bg-gold h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${analysisProgress.progress}%` }}
-                    />
+                  <div className="w-full bg-silver/20 rounded-full h-2">
+                    <div className="bg-gold h-2 rounded-full" style={{ width: `${analysisProgress.progress}%` }} />
                   </div>
                 </div>
               )}
             </div>
 
             {error && (
-              <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg flex items-center space-x-2">
+              <div role="alert" aria-live="assertive" className="mt-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg flex items-center space-x-2">
                 <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-                <div className="text-red-700 dark:text-red-200 font-work-sans">
-                  <div className="font-semibold mb-1">Analysis Failed</div>
-                  <div className="text-sm whitespace-pre-line">{error}</div>
-                </div>
+                <div className="text-red-700 dark:text-red-200 font-work-sans text-sm whitespace-pre-line">{error}</div>
               </div>
             )}
 
-            {/* Analysis Results */}
             {analysisResult && (
               <div className="mt-6 p-6 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
                 <div className="flex items-center space-x-2 mb-4">
                   <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                   <span className="font-orbitron font-semibold text-green-700 dark:text-green-200">Analysis Complete</span>
                 </div>
-                
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm font-work-sans">
                   <div className="bg-white dark:bg-charcoal p-3 rounded-lg">
                     <div className="text-charcoal/70 dark:text-silver">Status Code</div>
-                    <div className={`font-semibold ${analysisResult.technical.statusCode === 200 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {analysisResult.technical.statusCode}
-                    </div>
+                    <div className="font-semibold text-charcoal dark:text-white">{analysisResult.technical.statusCode}</div>
                   </div>
-                  
                   <div className="bg-white dark:bg-charcoal p-3 rounded-lg">
                     <div className="text-charcoal/70 dark:text-silver">Response Time</div>
-                    <div className="font-semibold text-charcoal dark:text-white">
-                      {Math.round(analysisResult.technical.responseTime)}ms
-                    </div>
+                    <div className="font-semibold text-charcoal dark:text-white">{Math.round(analysisResult.technical.responseTime)}ms</div>
                   </div>
-                  
                   <div className="bg-white dark:bg-charcoal p-3 rounded-lg">
                     <div className="text-charcoal/70 dark:text-silver">SSL Enabled</div>
-                    <div className={`font-semibold ${analysisResult.technical.sslEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {analysisResult.technical.sslEnabled ? 'Yes' : 'No'}
-                    </div>
+                    <div className="font-semibold text-charcoal dark:text-white">{analysisResult.technical.sslEnabled ? 'Yes' : 'No'}</div>
                   </div>
-                  
                   <div className="bg-white dark:bg-charcoal p-3 rounded-lg">
-                    <div className="text-charcoal/70 dark:text-silver text-sm">Content Length</div>
+                    <div className="text-charcoal/70 dark:text-silver">Load Metric</div>
                     <div className="font-semibold text-charcoal dark:text-white">
-                      {Math.round(analysisResult.technical.contentLength / 1024)}KB
-                    </div>
-                  </div>
-                </div>
-
-                {analysisResult.metadata.title && (
-                  <div className="mt-4 p-3 bg-white dark:bg-charcoal rounded-lg">
-                    <div className="text-charcoal/70 dark:text-silver text-sm">Page Title</div>
-                    <div className="font-semibold text-charcoal dark:text-white">{analysisResult.metadata.title}</div>
-                  </div>
-                )}
-
-                {/* Existing Files Check */}
-                <div className="mt-4 grid md:grid-cols-2 gap-4">
-                  <div className="p-3 bg-white dark:bg-charcoal rounded-lg">
-                    <div className="text-charcoal/70 dark:text-silver text-sm">Robots.txt</div>
-                    <div className={`font-semibold ${analysisResult.technical.hasRobots ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
-                      {analysisResult.technical.hasRobots ? (
-                        <a href={analysisResult.existingFiles.robotsTxt.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                          Found - View File
-                        </a>
-                      ) : (
-                        'Not Found'
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="p-3 bg-white dark:bg-charcoal rounded-lg">
-                    <div className="text-charcoal/70 dark:text-silver text-sm">Sitemap.xml</div>
-                    <div className={`font-semibold ${analysisResult.technical.hasSitemap ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
-                      {analysisResult.technical.hasSitemap ? (
-                        <a href={analysisResult.existingFiles.sitemap.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                          Found - View File
-                        </a>
-                      ) : (
-                        'Not Found'
-                      )}
+                      {analysisResult.performance.loadTime ? `${Math.round(analysisResult.performance.loadTime)}ms` : 'Not measured'}
                     </div>
                   </div>
                 </div>
@@ -419,140 +412,119 @@ export default function Online() {
             )}
           </div>
 
-          {/* Configuration Section */}
           <div className="bg-white dark:bg-charcoal rounded-2xl p-8 border border-gold/20 dark:border-gold/30">
-            <h2 className="font-orbitron text-2xl font-bold text-charcoal dark:text-white mb-6">
-              Configuration
-            </h2>
-
+            <h2 className="font-orbitron text-2xl font-bold text-charcoal dark:text-white mb-6">Configuration</h2>
             <div className="space-y-6">
-              {/* Agent Configuration */}
-              {renderAgentSection(
-                "AI Crawlers", 
-                [...getAgentsByType("training-crawler"), ...getAgentsByType("live-search-indexer")],
-                "Automated crawlers that index and train on your content"
-              )}
-              
-              {renderAgentSection(
-                "On-Demand Fetchers", 
-                getAgentsByType("on-demand-fetch"),
-                "User-triggered fetchers that may bypass robots.txt"
-              )}
-              
-              {renderAgentSection(
-                "Policy Tokens", 
-                getAgentsByType("policy-token"),
-                "Special robots.txt tokens that control AI training usage"
-              )}
+              {renderAgentSection('AI Crawlers', [...getAgentsByType('training-crawler'), ...getAgentsByType('live-search-indexer')])}
+              {renderAgentSection('On-Demand Fetchers', getAgentsByType('on-demand-fetch'))}
+              {renderAgentSection('Policy Tokens', getAgentsByType('policy-token'))}
 
-              {/* Basic Options */}
               <div className="border-t border-silver/20 dark:border-silver/30 pt-6">
                 <h3 className="font-orbitron font-semibold text-charcoal dark:text-white mb-4">Options</h3>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <label className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        checked={config.allowTraining}
-                        onChange={(e) => setConfig(prev => ({ ...prev, allowTraining: e.target.checked }))}
-                        className="w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2"
-                        style={{ accentColor: '#FFD700' }}
-                      />
+                      <input type="checkbox" checked={config.allowTraining} onChange={(e) => setConfig((prev) => ({ ...prev, allowTraining: e.target.checked }))} />
                       <span className="font-work-sans text-charcoal dark:text-white">Allow AI training on content</span>
                     </label>
-                    
                     <label className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        checked={config.includeHumans}
-                        onChange={(e) => setConfig(prev => ({ ...prev, includeHumans: e.target.checked }))}
-                        className="w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2"
-                        style={{ accentColor: '#FFD700' }}
-                      />
+                      <input type="checkbox" checked={config.includeHumans} onChange={(e) => setConfig((prev) => ({ ...prev, includeHumans: e.target.checked }))} />
                       <span className="font-work-sans text-charcoal dark:text-white">Include humans.txt</span>
                     </label>
-                    
                     <label className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        checked={config.includeSitemap}
-                        onChange={(e) => setConfig(prev => ({ ...prev, includeSitemap: e.target.checked }))}
-                        className="w-5 h-5 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2"
-                        style={{ accentColor: '#FFD700' }}
-                      />
+                      <input type="checkbox" checked={config.includeSitemap} onChange={(e) => setConfig((prev) => ({ ...prev, includeSitemap: e.target.checked }))} />
                       <span className="font-work-sans text-charcoal dark:text-white">Generate enhanced sitemap</span>
                     </label>
-                  </div>
-
-                  <div className="space-y-4">
                   </div>
                 </div>
               </div>
 
-              {/* Advanced Settings Toggle */}
               <div className="border-t border-silver/20 dark:border-silver/30 pt-6">
-                <button
-                  onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="flex items-center space-x-2 text-gold hover:text-gold-light dark:hover:text-gold-light transition-colors font-work-sans"
-                >
+                <button onClick={() => setShowAdvanced(!showAdvanced)} className="flex items-center space-x-2 text-gold">
                   <Settings className="w-5 h-5" />
                   <span>{showAdvanced ? 'Hide' : 'Show'} Advanced Settings</span>
                 </button>
               </div>
 
-              {/* Advanced Options */}
               {showAdvanced && (
                 <div className="pt-4">
-                  <h3 className="font-orbitron font-semibold text-charcoal dark:text-white mb-4">Advanced Settings</h3>
-                  
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="font-work-sans font-medium text-charcoal dark:text-white mb-3">Include Assets</h4>
-                      <div className="space-y-2">
-                        {Object.entries(config.includeAssets).map(([key, value]) => (
-                          <label key={key} className="flex items-center space-x-3">
-                            <input
-                              type="checkbox"
-                              checked={value}
-                              onChange={(e) => setConfig(prev => ({
-                                ...prev,
-                                includeAssets: { ...prev.includeAssets, [key]: e.target.checked }
-                              }))}
-                              className="w-4 h-4 text-gold bg-white dark:bg-matte-bg border-gold/30 dark:border-gold/40 rounded focus:ring-gold focus:ring-2"
-                              style={{ accentColor: '#FFD700' }}
-                            />
-                            <span className="font-work-sans text-sm text-charcoal dark:text-white capitalize">{key}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-work-sans font-medium text-charcoal dark:text-white mb-2">
-                        Compression Level
-                      </label>
-                      <select
-                        value={config.compression}
-                        onChange={(e) => setConfig(prev => ({ ...prev, compression: e.target.value as 'none' | 'standard' | 'maximum' }))}
-                        className="w-full px-4 py-2 border border-silver/30 dark:border-silver/40 rounded-lg bg-white dark:bg-matte-bg text-charcoal dark:text-white font-work-sans focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none"
-                      >
-                        <option value="none">None (Fastest)</option>
-                        <option value="standard">Standard (Balanced)</option>
-                        <option value="maximum">Maximum (Smallest)</option>
-                      </select>
-                    </div>
-                  </div>
+                  <label className="block text-sm font-work-sans font-medium text-charcoal dark:text-white mb-2">Compression Level</label>
+                  <select
+                    value={config.compression}
+                    onChange={(e) => setConfig((prev) => ({ ...prev, compression: e.target.value as 'none' | 'standard' | 'maximum' }))}
+                    className="w-full px-4 py-2 border border-silver/30 rounded-lg bg-white dark:bg-matte-bg"
+                  >
+                    <option value="none">None (Fastest)</option>
+                    <option value="standard">Standard (Balanced)</option>
+                    <option value="maximum">Maximum (Smallest)</option>
+                  </select>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Generate Section */}
+          {analysisResult && (
+            <div className="bg-white dark:bg-charcoal rounded-2xl p-8 border border-gold/20 dark:border-gold/30">
+              <h2 className="font-orbitron text-2xl font-bold text-charcoal dark:text-white mb-4">Preview and Diff</h2>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {PREVIEW_FILES.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => setSelectedPreview(name)}
+                    className={`px-3 py-2 rounded-lg border text-sm ${selectedPreview === name ? 'border-gold bg-gold/10' : 'border-silver/30'}`}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold mb-2">Existing file</h3>
+                  <textarea value={existingContent || 'No existing file detected'} readOnly className="w-full h-64 p-3 border rounded-lg bg-matte-bg/20" />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">Generated file</h3>
+                  <textarea value={previewArtifact?.content || 'No generated content for this file'} readOnly className="w-full h-64 p-3 border rounded-lg bg-matte-bg/20" />
+                </div>
+              </div>
+              <p className="text-sm text-charcoal/70 dark:text-silver mt-3">Guidance: replace if file is missing/outdated, merge manually if both include custom directives.</p>
+
+              <div className="mt-5 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleSingleDownload(selectedPreview)}
+                  className="px-4 py-2 rounded-lg border border-gold text-gold hover:bg-gold/10"
+                >
+                  Download Current File
+                </button>
+                <button type="button" onClick={handleDownloadSelected} className="px-4 py-2 rounded-lg border border-gold text-gold hover:bg-gold/10">
+                  Download Selected Files (ZIP)
+                </button>
+              </div>
+
+              <div className="mt-4 grid md:grid-cols-2 gap-2">
+                {artifacts.map((artifact) => (
+                  <label key={artifact.name} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${artifact.name} for download`}
+                      checked={Boolean(selectedDownloads[artifact.name])}
+                      onChange={(e) => setSelectedDownloads((prev) => ({ ...prev, [artifact.name]: e.target.checked }))}
+                    />
+                    <span>{artifact.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="text-center">
             <button
-              onClick={handleGenerate}
+              onClick={handleGenerateZip}
               disabled={isGenerating || !analysisResult}
-              className="group bg-charcoal dark:bg-gold border-2 border-gold dark:border-charcoal text-gold dark:text-charcoal px-12 py-4 rounded-lg font-orbitron font-semibold text-lg transition-all duration-300 hover:bg-gold hover:text-charcoal dark:hover:bg-charcoal dark:hover:text-gold transform hover:scale-105 hover:shadow-lg hover:shadow-gold/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center space-x-3 mx-auto"
+              className="group bg-charcoal dark:bg-gold border-2 border-gold text-gold dark:text-charcoal px-12 py-4 rounded-lg font-orbitron font-semibold text-lg disabled:opacity-50 flex items-center space-x-3 mx-auto"
             >
               {isGenerating ? (
                 <>
@@ -562,58 +534,21 @@ export default function Online() {
               ) : (
                 <>
                   <FileText className="w-6 h-6" />
-                  <span>Generate & Download ZIP</span>
+                  <span>Generate and Download ZIP</span>
                 </>
               )}
             </button>
-            
-            {/* Generation Progress */}
+
             {isGenerating && (
-              <div className="mt-6 max-w-md mx-auto p-4 bg-gold/10 dark:bg-gold/20 border border-gold/30 dark:border-gold/40 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-work-sans text-sm text-charcoal dark:text-white">
-                    {generationProgress.status}
-                  </span>
-                  <span className="font-work-sans text-sm text-charcoal dark:text-white">
-                    {generationProgress.progress}%
-                  </span>
+              <div aria-live="polite" className="mt-6 max-w-md mx-auto p-4 bg-gold/10 border border-gold/30 rounded-lg">
+                <div className="flex items-center justify-between mb-2 text-sm">
+                  <span>{generationProgress.status}</span>
+                  <span>{generationProgress.progress}%</span>
                 </div>
-                <div className="w-full bg-silver/20 dark:bg-silver/30 rounded-full h-2">
-                  <div 
-                    className="bg-gold h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${generationProgress.progress}%` }}
-                  />
+                <div className="w-full bg-silver/20 rounded-full h-2">
+                  <div className="bg-gold h-2 rounded-full" style={{ width: `${generationProgress.progress}%` }} />
                 </div>
               </div>
-            )}
-            
-            {/* Error Display */}
-            {error && (
-              <div className="mt-4 max-w-md mx-auto p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <div className="flex items-start space-x-3">
-                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <h3 className="font-work-sans font-medium text-red-800 dark:text-red-200">
-                      Generation Error
-                    </h3>
-                    <p className="mt-1 text-sm text-red-700 dark:text-red-300 font-work-sans">
-                      {error}
-                    </p>
-                    <button
-                      onClick={() => setError('')}
-                      className="mt-2 text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 font-work-sans underline"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {!analysisResult && !isAnalyzing && (
-              <p className="mt-4 text-sm text-charcoal/70 dark:text-silver font-work-sans">
-                Please analyze your website first to enable generation
-              </p>
             )}
           </div>
         </div>

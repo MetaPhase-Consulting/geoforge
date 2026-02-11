@@ -40,9 +40,10 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.cli.json",
+    "build": "npm run sync && tsc --project tsconfig.cli.json",
     "prepublishOnly": "npm run build",
-    "test": "echo \"No tests specified\" && exit 0"
+    "test": "echo \"No tests specified\" && exit 0",
+    "sync": "bash ../scripts/sync-cli-package.sh"
   },
   "dependencies": {
     "commander": "^12.1.0",
