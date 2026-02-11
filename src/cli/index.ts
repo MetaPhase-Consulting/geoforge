@@ -28,7 +28,7 @@ program
   .option('--compression <level>', 'Set compression level (none, standard, maximum)', 'standard')
   .option('--output <dir>', 'Output directory (default: geoforge-output)', 'geoforge-output')
   .action(async (url: string, options: CliOptions) => {
-    const logger = new Logger(Boolean(options.verbose));
+    const logger = new Logger(Boolean(options.verbose), Boolean(options.jsonSummary));
     logger.info('🚀 Starting GEOforge CLI...');
 
     const formattedUrl = formatUrl(url);

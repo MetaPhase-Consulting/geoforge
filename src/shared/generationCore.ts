@@ -31,6 +31,12 @@ function parseUrl(rawUrl: string): URL {
 }
 
 function getAgentRule(options: GenerationOptions, agentId: string): 'Allow: /' | 'Disallow: /' {
+  // Per-agent overrides always take precedence when explicitly set
+  if (agentId in options.agents) {
+    return options.agents[agentId] === false ? 'Disallow: /' : 'Allow: /';
+  }
+
+  // Fall back to profile defaults for agents not in the map
   if (options.profile === 'strict-privacy') return 'Disallow: /';
   if (options.profile === 'open-discovery') return 'Allow: /';
 
@@ -39,7 +45,7 @@ function getAgentRule(options: GenerationOptions, agentId: string): 'Allow: /' |
     if (trainingIds.has(agentId)) return 'Disallow: /';
   }
 
-  return options.agents[agentId] === false ? 'Disallow: /' : 'Allow: /';
+  return 'Allow: /';
 }
 
 function generateRobotsTxt(options: GenerationOptions): GeneratedArtifact {
