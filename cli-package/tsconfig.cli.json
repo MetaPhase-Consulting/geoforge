@@ -23,7 +23,8 @@
   },
   "include": [
     "src/cli/**/*",
-    "src/config/agents.ts"
+    "src/config/agents.ts",
+    "src/shared/**/*"
   ],
   "exclude": [
     "node_modules",

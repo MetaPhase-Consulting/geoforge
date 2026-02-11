@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, FileText, Zap, Shield, Globe, CheckCircle } from 'lucide-react';
+import { Bot, FileText, CheckCircle } from 'lucide-react';
 
 export default function FeatureBlocks() {
   const features = [

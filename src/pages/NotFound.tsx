@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Home, Search, Code, Zap, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Home, Search, Code, Zap, ArrowLeft } from 'lucide-react';
 
 const NotFound: React.FC = () => {
   const [isAnimating, setIsAnimating] = useState(false);

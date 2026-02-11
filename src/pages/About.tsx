@@ -1,5 +1,5 @@
 import React from 'react';
-import { Hammer, Target, Users, Zap, Shield, AlertTriangle, User, BookOpen } from 'lucide-react';
+import { Target, Users, Zap, Shield, AlertTriangle, User, BookOpen } from 'lucide-react';
 
 export default function About() {
   const features = [

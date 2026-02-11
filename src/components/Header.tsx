@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Moon, Sun, Download, Terminal, BookOpen } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
+import { Moon, Sun, Download, Terminal, BookOpen, Menu, X } from 'lucide-react';
+import { useTheme } from '../contexts/useTheme';
 
 export default function Header() {
   const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const navItems = [
     { path: '/online', label: 'Online Tool', icon: Download },
@@ -17,16 +18,11 @@ export default function Header() {
     <header className="sticky top-0 z-50 bg-white/95 dark:bg-black/95 backdrop-blur-sm border-b border-gold/30 dark:border-gold/40">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <span className="font-orbitron text-2xl font-bold shimmer-text">
-              GEOforge
-            </span>
+            <span className="font-orbitron text-2xl font-bold shimmer-text">GEOforge</span>
           </Link>
 
-          {/* Right side - Navigation and Theme Toggle */}
-          <div className="flex items-center space-x-8">
-            {/* Navigation */}
+          <div className="flex items-center space-x-3 md:space-x-8">
             <nav className="hidden md:flex items-center space-x-8">
               {navItems.map((item) => (
                 <Link
@@ -44,20 +40,41 @@ export default function Header() {
               ))}
             </nav>
 
-            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="w-10 h-10 rounded-lg bg-gold/10 hover:bg-gold/20 dark:bg-matte-bg dark:hover:bg-matte-bg/80 flex items-center justify-center transition-colors duration-200 border border-gold/30 dark:border-gold/50"
+              className="w-10 h-10 rounded-lg bg-gold/10 hover:bg-gold/20 dark:bg-matte-bg dark:hover:bg-matte-bg/80 flex items-center justify-center border border-gold/30 dark:border-gold/50"
               aria-label="Toggle theme"
             >
-              {!isDark ? (
-                <Moon className="w-5 h-5 text-gold" />
-              ) : (
-                <Sun className="w-5 h-5 text-gold" />
-              )}
+              {!isDark ? <Moon className="w-5 h-5 text-gold" /> : <Sun className="w-5 h-5 text-gold" />}
+            </button>
+
+            <button
+              type="button"
+              className="md:hidden w-10 h-10 rounded-lg border border-gold/30 text-gold flex items-center justify-center"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              aria-label="Toggle navigation"
+              aria-expanded={menuOpen}
+              aria-controls="mobile-nav"
+            >
+              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
+
+        {menuOpen && (
+          <nav id="mobile-nav" className="md:hidden mt-4 space-y-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`block px-3 py-2 rounded-lg ${location.pathname === item.path ? 'bg-gold/20 text-gold' : 'text-charcoal dark:text-silver'}`}
+                onClick={() => setMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        )}
       </div>
     </header>
   );

@@ -6,13 +6,12 @@ import path from 'path';
 import { formatUrl } from './utils/urlUtils.js';
 import { createAnalysisConfig, getCompressionLevel, type CliOptions } from './utils/configUtils.js';
 import { generateFiles } from './generators/fileGenerator.js';
+import type { AnalysisResult } from '../shared/types.js';
+import { Logger } from './utils/logger.js';
 
 const program = new Command();
 
-program
-  .name('geoforge-cli')
-  .description('Analyzes a website and generates AI-ready optimization files.')
-  .version('0.0.1');
+program.name('geoforge-cli').description('Analyzes a website and generates AI-ready optimization files.').version('0.0.1');
 
 program
   .argument('<url>', 'The URL of the website to analyze.')
@@ -23,78 +22,85 @@ program
   .option('--no-security-txt', 'Do not generate security.txt')
   .option('--no-manifest', 'Do not generate manifest.json')
   .option('--no-ads', 'Do not generate ads.txt and app-ads.txt')
-
+  .option('--profile <profile>', 'Generation profile: strict-privacy, balanced, open-discovery', 'balanced')
+  .option('--json-summary', 'Output machine-readable run summary JSON to stdout', false)
+  .option('--verbose', 'Enable verbose logging', false)
   .option('--compression <level>', 'Set compression level (none, standard, maximum)', 'standard')
   .option('--output <dir>', 'Output directory (default: geoforge-output)', 'geoforge-output')
-  .action(async (url, options) => {
-    console.log('🚀 Starting GEOforge CLI...');
+  .action(async (url: string, options: CliOptions) => {
+    const logger = new Logger(Boolean(options.verbose), Boolean(options.jsonSummary));
+    logger.info('🚀 Starting GEOforge CLI...');
 
-    // --- URL Formatting ---
     const formattedUrl = formatUrl(url);
     if (!formattedUrl) {
-      console.error('❌ Invalid URL provided.');
+      logger.error('❌ Invalid URL provided.');
       process.exit(1);
     }
-    console.log(`✅ Analyzing URL: ${formattedUrl}`);
+    logger.info(`✅ Analyzing URL: ${formattedUrl}`);
 
-    // --- Website Analysis ---
     try {
-      console.log('🔍 Starting website analysis...');
-      
-      // Create analysis configuration
       const analysisConfig = createAnalysisConfig(formattedUrl, options as CliOptions);
+      let analysisResult: AnalysisResult;
 
-      // Create analyzer and run analysis
-      const analyzer = new WebsiteAnalyzer(analysisConfig);
-      const analysisResult = await analyzer.analyze((progress, status) => {
-        console.log(`📊 ${status} (${progress}%)`);
-      });
+      if (process.env.GEOFORGE_MOCK_ANALYSIS === '1') {
+        const fixturePath = path.resolve(process.cwd(), 'tests/fixtures/analysisResult.json');
+        const fixture = await fs.readFile(fixturePath, 'utf-8');
+        analysisResult = JSON.parse(fixture) as AnalysisResult;
+      } else {
+        logger.info('🔍 Starting website analysis...');
+        const analyzer = new WebsiteAnalyzer(analysisConfig);
+        analysisResult = await analyzer.analyze((progress, status) => {
+          logger.debug(`📊 ${status} (${progress}%)`);
+        });
+      }
 
       if (analysisResult.status === 'error') {
-        console.error('❌ Website analysis failed:', analysisResult.errors);
+        logger.error(`❌ Website analysis failed: ${analysisResult.errors.join('; ')}`);
         process.exit(1);
       }
 
-      console.log('✅ Website analysis completed successfully!');
+      logger.info('✅ Website analysis completed successfully!');
 
-      // Update site name with actual title
-      const siteName = analysisResult.metadata.title || new URL(formattedUrl).hostname;
-      analysisConfig.siteName = siteName;
+      const { zip, filename, artifacts } = await generateFiles(formattedUrl, analysisResult, {
+        ...options,
+        profile: analysisConfig.profile,
+        allowTraining: analysisConfig.allowTraining,
+        agents: analysisConfig.agents
+      });
 
-      // --- File Generation ---
-      console.log('📦 Generating comprehensive AI optimization files...');
-      
-      const { zip, filename } = await generateFiles(formattedUrl, analysisResult, options as CliOptions);
-
-      // Set compression level
       const compressionLevel = getCompressionLevel(options.compression);
-
-      console.log(`🗜️ Compressing files with level ${compressionLevel}...`);
-      const zipBuffer = await zip.generateAsync({ 
-        type: 'nodebuffer', 
+      logger.info(`🗜️ Compressing files with level ${compressionLevel}...`);
+      const zipBuffer = await zip.generateAsync({
+        type: 'nodebuffer',
         compression: 'DEFLATE',
         compressionOptions: { level: compressionLevel }
       });
 
-      // Save ZIP file
       const outputDir = path.resolve(process.cwd(), options.output || 'geoforge-output');
       await fs.mkdir(outputDir, { recursive: true });
-      
       const zipPath = path.join(outputDir, filename);
       await fs.writeFile(zipPath, zipBuffer);
 
-      console.log('🎉 ZIP file generated successfully!');
-      console.log(`📁 Output directory: ${outputDir}`);
-      console.log(`📦 ZIP file: ${filename}`);
-      console.log(`📊 File size: ${(zipBuffer.length / 1024).toFixed(2)} KB`);
+      logger.info('🎉 ZIP file generated successfully!');
+      logger.info(`📁 Output directory: ${outputDir}`);
+      logger.info(`📦 ZIP file: ${filename}`);
+      logger.info(`📊 File size: ${(zipBuffer.length / 1024).toFixed(2)} KB`);
 
-    } catch (error) {
-      console.error('💥 An error occurred:');
-      if (error instanceof Error) {
-        console.error(error.message);
-      } else {
-        console.error(error);
+      if (options.jsonSummary) {
+        const summary = {
+          url: formattedUrl,
+          profile: analysisConfig.profile,
+          artifactCount: artifacts.length,
+          artifacts: artifacts.map((item) => item.name),
+          outputPath: zipPath,
+          sizeBytes: zipBuffer.length,
+          status: 'success'
+        };
+        console.log(JSON.stringify(summary));
       }
+    } catch (error) {
+      logger.error('💥 An error occurred:');
+      logger.error(error instanceof Error ? error.message : String(error));
       process.exit(1);
     }
   });
