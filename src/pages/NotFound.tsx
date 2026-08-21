@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Home, Search, Code, Zap, ArrowLeft } from 'lucide-react';
 
 const NotFound: React.FC = () => {
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions] = useState([
     'Generate robots.txt',
@@ -15,7 +15,6 @@ const NotFound: React.FC = () => {
   ]);
 
   useEffect(() => {
-    setIsAnimating(true);
     const timer = setTimeout(() => setIsAnimating(false), 2000);
     return () => clearTimeout(timer);
   }, []);
