@@ -31,15 +31,18 @@ and that agreement is worth enforcing mechanically rather than by habit.
 
 ## In this repository
 
-There is no `AGENTS.md` and no `CLAUDE.md` anywhere in this repository as of
-this writing — no runtime entry point of any kind for either Claude Code or
-Codex. An agent started directly in this repo today discovers `README.md`
-and `TESTING.md` (both real, accurate guides — see the other tool files for
-why that distinction matters here specifically) but nothing pointing at
-this `.challengeai/` folder. That's a real, named gap against this tool's
-own "one source, two runtimes" principle, worth closing with a root
-`AGENTS.md`/`CLAUDE.md` pair as a deliberate maintainer decision — not
-something this documentation pass adds unasked.
+`AGENTS.md` and `CLAUDE.md` exist at the repo root, kept byte-identical
+below their shared "Keep this in sync" heading — both point at
+`.challengeai/` and `CHALLENGEAI.md` rather than restating the federal
+layer, and both carry the same repository-specific operational knowledge
+an agent needs before trusting this repo's own documentation: the real
+CI branch-trigger bug (see ChallengeCI), and which of `SECURITY.md`/
+`PRIVACY.md`/`DEPLOYMENT.md` vs. `README.md`/`TESTING.md` to actually
+trust (see ChallengeATO, ChallengeCD). Nothing mechanically enforces the
+two files staying in sync — that's still a manual discipline, not a CI
+check — so a future edit to one that isn't mirrored to the other is a
+real way for them to drift, the exact failure mode this tool's "One
+source, two runtimes" principle warns about.
 
 ## Evidence
 
