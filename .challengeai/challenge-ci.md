@@ -51,23 +51,36 @@ run once a PR is opened against `main` — not on the branch most commits
 actually land on first. This is a configuration bug, not a design choice;
 nothing in this repository explains it as intentional.
 
-Once CI does run, the `test` job is genuinely solid: lint, build, tests,
-and `npm audit --audit-level=high`, all with no `continue-on-error`,
-across Node 18.x and 20.x — a real, blocking security gate matching the
-strongest sibling repos in this suite. The `deploy` job (gated on `test`
+Once CI does run, the `test` job's individual gates (lint, build, tests,
+`npm audit --audit-level=high`, all with no `continue-on-error`) are
+solid — but the Node 18.x leg of its matrix isn't: the committed lockfile
+declares Vite 7.3.6 requires `^20.19.0 || >=22.12.0`, and `.nvmrc` pins
+Node 22, yet the matrix still includes `18.x`. That leg can fail before
+completing the advertised gates on any run where Vite's own engine check
+actually bites, which — since `deploy` `needs: test` for the whole
+matrix — can also block deployment from `main`. Real gates, running on an
+unsupported Node version for one of two legs; not a working two-version
+matrix as it might first appear. The `deploy` job (gated on `test`
 passing, and on being on `main`) deploys to Netlify via
 `nwtgck/actions-netlify@v2.0` using `NETLIFY_AUTH_TOKEN`/`NETLIFY_SITE_ID`
 as long-lived GitHub Actions secrets — see ChallengeCD for why that's
 worth naming as a real, if lower-severity, deviation from this tool's
 "short-lived federated identity" hardening principle.
 
-`dependency-hygiene.yml` is genuinely more automated than most sibling
-repos' equivalent: weekly, it runs a real audit report, applies
-`npm audit fix` (best-effort, `|| true`), and opens an actual PR with the
-lockfile changes via `peter-evans/create-pull-request` — a real automated
-remediation loop, not just a report. It correctly declares an explicit
-`permissions: contents: write, pull-requests: write` block, since it needs
-both. `ci.yml`'s two jobs declare no `permissions:` block at all, relying
+`dependency-hygiene.yml` looks more automated than most sibling repos'
+equivalent, but the automation is broken in exactly the case it exists
+for. Its steps run in order with no `continue-on-error`: "Run audit
+report" (`npm audit --audit-level=moderate`, no `|| true`) runs first,
+*then* "Update lockfile with safe fixes" (`npm audit fix || true`), *then*
+"Create PR with dependency updates." `npm audit` exits nonzero when it
+finds a vulnerability at or above the given level — so on the one run
+where there's actually something to fix, the audit step itself fails and
+GitHub Actions skips both subsequent steps by default. The auto-fix and
+auto-PR only ever run on a week where the audit was already clean, which
+is precisely when there's nothing for them to do. It correctly declares an
+explicit `permissions: contents: write, pull-requests: write` block, since
+it needs both, once it's actually fixed to reach those steps. `ci.yml`'s
+two jobs declare no `permissions:` block at all, relying
 on the repository default instead.
 
 Actions across both workflows are pinned to major-version tags (`@v4`,
@@ -96,5 +109,12 @@ a run at all.
 - **This repository-specific, and the fix this file most wants made:**
   change `ci.yml`'s push trigger from `develop` to `dev` (and confirm the
   `pull_request` trigger's target branch matches actual practice too). This
-  is a one-line fix that closes the largest gap in this repository's CI
-  posture — everything else already works well once it actually runs.
+  is a one-line fix, but two more are needed before "it actually runs"
+  means "it actually works":
+- **This repository-specific:** drop the `18.x` leg from `ci.yml`'s matrix
+  (or bump it to a version Vite 7 actually supports) — it's currently
+  running against an unsupported Node version.
+- **This repository-specific:** reorder or fix `dependency-hygiene.yml` so
+  the audit step's failing exit code doesn't skip the fix-and-PR steps —
+  add `continue-on-error: true` (or `|| true`) to "Run audit report," or
+  restructure so the fix/PR steps run regardless of the audit result.

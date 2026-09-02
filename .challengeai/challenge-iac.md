@@ -39,8 +39,11 @@ by `ci.yml` (see ChallengeCD). `netlify.toml` is the entire real
 infrastructure declaration — build command, publish directory, one
 SPA-fallback redirect rule.
 
-`Dockerfile` and `docker-compose.yml` are real and buildable, but not part
-of the production deployment path — see ChallengeCD for why
+`Dockerfile` and `docker-compose.yml` exist, but the `Dockerfile` itself
+doesn't actually build — see ChallengeCD for the specific defect (a
+production-only dependency install followed by a build step that needs a
+dev-only tool). Neither is part of the production deployment path either
+way — see ChallengeCD for why
 `DEPLOYMENT.md`'s presentation of Docker (and Vercel, and GitHub Pages) as
 deployment options is misleading relative to what `ci.yml` actually does.
 
@@ -92,8 +95,7 @@ beyond the build succeeding.
 - Does the running configuration still match what is declared?
 - Is a new resource missing a retention or lifecycle setting, leaving it at the
   provider default?
-- **This repository-specific:** if `Dockerfile`/`docker-compose.yml` are
-  kept, does `DEPLOYMENT.md` clearly mark them as a local-dev convenience
-  rather than a production deployment path? Leaving the ambiguity in place
-  invites someone to actually try deploying via Docker and discover it was
-  never the real path.
+- **This repository-specific:** is `Dockerfile` actually fixed (or
+  removed) before `DEPLOYMENT.md` is relied on again? It currently
+  documents `docker build`/`docker-compose up` as working commands, and
+  neither one succeeds — see ChallengeCD.

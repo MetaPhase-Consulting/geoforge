@@ -53,9 +53,9 @@ No rendered-UI or accessibility test exists yet.
 
 - **Default/working branch is `dev`. Release branch is `main`.**
 - **`ci.yml`'s push trigger currently listens for `[main, develop]` — not `dev`.** No `develop` branch exists or ever has. **Pushes to `dev` do not trigger CI.** CI only runs on a direct push to `main` or a PR targeting `main`. Don't assume a green check exists for work still on `dev` — it doesn't, until this trigger is fixed. See `.challengeai/challenge-ci.md`.
-- CI (`test` job, when it does run): lint, build, `test:run`, and `npm audit --audit-level=high` — all blocking, no `continue-on-error`, across Node 18.x/20.x.
+- CI (`test` job, when it does run): lint, build, `test:run`, and `npm audit --audit-level=high` — all blocking, no `continue-on-error`. Matrix is `[18.x, 20.x]`, but the `18.x` leg is unsupported — the lockfile requires Vite 7.3.6's `^20.19.0 || >=22.12.0`, and `.nvmrc` pins 22 — so that leg can fail before completing the gates. Don't trust an `18.x` failure as a real signal without checking whether it's this engine mismatch first.
 - Deploy (`deploy` job, on `main` only): pushes `dist/` to Netlify via `nwtgck/actions-netlify`, using `NETLIFY_AUTH_TOKEN`/`NETLIFY_SITE_ID` GitHub Actions secrets.
-- `dependency-hygiene.yml` runs weekly, audits, applies `npm audit fix`, and opens a real PR with the changes.
+- `dependency-hygiene.yml` runs weekly, audits, applies `npm audit fix`, and opens a real PR with the changes — except its own audit step's failing exit code (no `continue-on-error`, no `|| true`) currently skips the fix-and-PR steps whenever a vulnerability actually exists, which is the one case this workflow is meant to handle. Don't assume a moderate+ advisory produced an auto-PR; check directly.
 
 ## Known Documentation Drift — do not treat these as ground truth
 

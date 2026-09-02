@@ -75,13 +75,21 @@ never mentioned in `DEPLOYMENT.md` at all. This document appears to be
 generic deployment boilerplate that was never adapted to this project,
 the same pattern found in `SECURITY.md`/`PRIVACY.md` — see ChallengeATO.
 
-**Docker is real but unused in the actual deploy path.** `Dockerfile` and
-`docker-compose.yml` both work as local-dev conveniences (the Dockerfile's
-own `CMD` runs `npm run preview`, which the Vite project itself documents
-as a local preview server, not a production server), but nothing in CI
-builds or pushes a Docker image, and `DEPLOYMENT.md`'s "Docker Deployment"
-section describes running the container directly as if it were a
-production deployment option — it isn't one this repository actually uses.
+**Docker isn't just unused in the deploy path — the `Dockerfile` itself is
+broken and cannot build.** `RUN npm ci --only=production` (equivalent to
+`npm ci --omit=dev`) skips installing every devDependency, which is where
+`vite` and `typescript` — the build tools the very next step depends on —
+both live. The following `RUN npm run build` invokes `vite build`, which
+won't be on `PATH` at all, so the image build fails there every time. This
+isn't a documentation-vs-reality gap like `DEPLOYMENT.md`'s other claims —
+it's a real defect in the `Dockerfile` itself, confirmed by tracing what
+each `RUN` step actually has available. `docker-compose.yml`'s `geoforge`
+service builds this same broken `Dockerfile` before its `command: npm run
+dev` override even runs, so `docker-compose up` fails at the build step
+too. Nothing in CI builds or pushes a Docker image, so this defect has
+never been caught automatically. `DEPLOYMENT.md`'s "Docker Deployment"
+section presents `docker build`/`docker-compose up` as working commands;
+they aren't.
 
 ## Secrets
 
@@ -130,6 +138,9 @@ actually runs.
   ChallengeCI's branch-trigger bug:** rewrite `DEPLOYMENT.md` to describe
   the actual deploy path — `ci.yml`'s Netlify job via
   `nwtgck/actions-netlify`, the real secrets involved, and the real
-  branch/trigger relationship — and either remove the Vercel/GitHub
-  Pages/Docker/Nginx sections or clearly mark them as untested
-  alternatives, not as this project's actual setup.
+  branch/trigger relationship — and either fix the `Dockerfile` (install
+  dev dependencies before the build step, or restructure into a
+  multi-stage build) or remove the Docker section entirely; it currently
+  documents a command that fails. Remove or clearly mark the Vercel/GitHub
+  Pages/Nginx sections as untested too — none of it is this project's
+  actual setup.
