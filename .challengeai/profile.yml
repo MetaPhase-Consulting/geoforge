@@ -1,0 +1,112 @@
+# Machine-readable declaration of what this system is held to.
+#
+# This is the one file in .challengeai/ that describes THIS system. The tool
+# files beside it are technology and repository agnostic on purpose; anything
+# specific belongs here, in a tool file's "In this repository" section, or in
+# the repository's own documentation.
+#
+# Read by tooling and by agents that need to branch on the profile rather than
+# parse prose.
+
+challengeai:
+  suite_version: "1.0"
+  built_with: true
+
+project:
+  name: "GEOforge"
+  slug: "geoforge"
+  tagline: "Generates AI-ready website files — robots.txt, sitemap.xml, .well-known/ai.txt, security.txt — via web UI and CLI"
+
+  operator: "MetaPhase"
+  # Generates original output files for a caller's own site; doesn't
+  # republish any government or third-party dataset.
+
+stack:
+  id: netlify-static-spa-plus-cli
+  frontend: react-vite
+  # No backend/API of any kind — fully client-side analysis and generation.
+  # DEPLOYMENT.md documents VITE_API_URL/VITE_APP_ENV/VITE_DEBUG and a
+  # staging environment; none of it exists in the actual code (no env var
+  # of that name is read anywhere in src/, no .env file exists). See
+  # challenge-cd.md.
+  backend: none
+  database: none
+  hosting: netlify
+  # Real, credential-based deploy (NETLIFY_AUTH_TOKEN/NETLIFY_SITE_ID as
+  # GitHub Actions secrets via nwtgck/actions-netlify), not Netlify's own
+  # GitHub-App auto-deploy the way most sibling repos use. See
+  # challenge-cd.md.
+  # Dockerfile/docker-compose.yml exist and are real, but nothing in CI
+  # deploys via Docker — the only automated deploy path is Netlify. Docker
+  # appears to be a local-dev convenience, not a production path.
+  containerization: docker-present-unused-in-ci
+  # A CORS-fallback dependency, not a chosen architecture: when a direct
+  # fetch of the analyzed site is blocked (CORS/anti-bot), the app relays
+  # the request through one of two third-party proxies and logs that this
+  # happened. Contradicts PRIVACY.md's "No Third Parties" claim — see
+  # challenge-ato.md.
+  third_party_proxy_fallback:
+    - api.allorigins.win
+    - api.codetabs.com
+  # Published, real, version-matched: geoforge-cli 0.1.2 on the npm
+  # registry, synced from src/cli via scripts/sync-cli-package.sh.
+  npm_packages:
+    - geoforge-cli
+
+standards:
+  # Not a federal information system — no agency operates it, no
+  # categorization performed. `null` records "not pursued," not "unknown."
+  control_baseline: null
+  impact_level: null
+  # SECURITY.md claims "WCAG 2.1 AA accessibility standards" as a
+  # compliance item. No automated accessibility scan, no jsx-a11y lint
+  # rule exists in this repository. Real but modest aria-/role usage
+  # exists in 3 components. `null` records the actual unverified state
+  # rather than repeating SECURITY.md's unbacked claim. See
+  # challenge-ui.md.
+  accessibility: null
+  accessibility_authority: null
+  # No accounts, no server-side persistence, no PII collected about this
+  # tool's own users — confirmed via challenge-sql.md's review. The one
+  # real privacy-relevant fact (the third-party proxy fallback passing a
+  # user-submitted URL to allorigins.win/codetabs.com) concerns the target
+  # site's own public content, not personal information about a GEOforge
+  # user, so it doesn't independently trigger this field — but it does
+  # falsify PRIVACY.md's specific "no third parties" claim regardless.
+  privacy_assessment_required: false
+
+gates:
+  # .github/workflows/ci.yml's "test" job: lint, build, test:run, and
+  # `npm audit --audit-level=high`, all with no continue-on-error — a real,
+  # blocking security gate, matching the strongest sibling repos in this
+  # suite. Runs across Node 18.x and 20.x.
+  workflow_checks_enforcement_unverified:
+    - Lint (npm run lint)
+    - Build (npm run build)
+    - Tests (npm run test:run)
+    - Security audit (npm audit --audit-level=high)
+
+  # dependency-hygiene.yml: weekly (Mondays), runs `npm audit
+  # --audit-level=moderate` as a report, then `npm audit fix || true`
+  # (never fails the workflow), and opens a real PR with the lockfile
+  # changes via peter-evans/create-pull-request. Genuinely more automated
+  # than most sibling repos' hygiene workflows — but still a report/PR,
+  # not a gate, and it never runs against a pull request itself.
+  advisory:
+    - Dependency Hygiene (weekly npm audit + auto-PR)
+
+  # CRITICAL CONFIGURATION BUG, not just unverified: ci.yml's push trigger
+  # listens for `[main, develop]`, but this repository's actual default/
+  # working branch is `dev` — no `develop` branch exists or has ever
+  # existed (confirmed against the full remote branch list). Every push to
+  # `dev` triggers NO CI RUN AT ALL. CI only fires on a pull_request
+  # targeting `main`, or a direct push to `main`. See challenge-ci.md.
+  misconfigured_branch_trigger:
+    - "ci.yml listens for push to 'develop'; actual branch is 'dev' — pushes to dev never trigger CI"
+
+  documented_but_unverified_branch_protection: []
+
+branches:
+  default: dev
+  release: main
+  protected_unverified: [dev, main]
