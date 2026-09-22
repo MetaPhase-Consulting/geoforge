@@ -31,18 +31,14 @@ and that agreement is worth enforcing mechanically rather than by habit.
 
 ## In this repository
 
-`AGENTS.md` and `CLAUDE.md` exist at the repo root, kept byte-identical
-below their shared "Keep this in sync" heading — both point at
+`AGENTS.md` is the single agent file at the repo root — there is no
+parallel `CLAUDE.md` to keep in sync with it. It points at
 `.challengeai/` and `CHALLENGEAI.md` rather than restating the federal
-layer, and both carry the same repository-specific operational knowledge
-an agent needs before trusting this repo's own documentation: the real
+layer, and carries the repository-specific operational knowledge an
+agent needs before trusting this repo's own documentation: the real
 CI branch-trigger bug (see ChallengeCI), and which of `SECURITY.md`/
 `PRIVACY.md`/`DEPLOYMENT.md` vs. `README.md`/`TESTING.md` to actually
-trust (see ChallengeATO, ChallengeCD). Nothing mechanically enforces the
-two files staying in sync — that's still a manual discipline, not a CI
-check — so a future edit to one that isn't mirrored to the other is a
-real way for them to drift, the exact failure mode this tool's "One
-source, two runtimes" principle warns about.
+trust (see ChallengeATO, ChallengeCD).
 
 ## Evidence
 

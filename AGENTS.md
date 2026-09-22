@@ -1,7 +1,5 @@
 # AGENTS.md — GEOforge
 
-**Keep this in sync with [`CLAUDE.md`](CLAUDE.md) — the two files carry the same guidance for Codex and Claude Code respectively; update both together.**
-
 ## About This Repo
 
 **GEOforge** generates AI-ready website files — `robots.txt`, `sitemap.xml`, `.well-known/ai.txt`, `.well-known/security.txt`, `manifest.json`, `browserconfig.xml`, `ads.txt`, `app-ads.txt` — via a web UI and a CLI, built by MetaPhase.
